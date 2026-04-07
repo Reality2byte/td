@@ -254,7 +254,7 @@ telegram_api::object_ptr<telegram_api::chatBannedRights> RestrictedRights::get_c
       !can_send_animations(), !can_send_games(), !can_use_inline_bots(), !can_add_web_page_previews(),
       !can_send_polls(), !can_change_info_and_settings(), !can_invite_users(), !can_pin_messages(),
       !can_manage_topics(), !can_send_photos(), !can_send_videos(), !can_send_video_notes(), !can_send_audios(),
-      !can_send_voice_notes(), !can_send_documents(), !can_send_messages(), !can_edit_rank(), 0);
+      !can_send_voice_notes(), !can_send_documents(), !can_send_messages(), !can_edit_rank(), false, 0);
 }
 
 bool operator==(const RestrictedRights &lhs, const RestrictedRights &rhs) {

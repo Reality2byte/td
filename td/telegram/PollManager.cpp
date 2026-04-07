@@ -289,8 +289,8 @@ class StopPollQuery final : public Td::ResultHandler {
 
     auto message_id = message_full_id.get_message_id().get_server_message_id().get();
     auto poll = telegram_api::make_object<telegram_api::poll>(
-        poll_id.get(), 0, true, false, false, false, false, false, false, false, true,
-        telegram_api::make_object<telegram_api::textWithEntities>(string(), Auto()), Auto(), 0, 0, 0);
+        poll_id.get(), 0, true, false, false, false, false, false, false, false, true, false,
+        telegram_api::make_object<telegram_api::textWithEntities>(string(), Auto()), Auto(), 0, 0, vector<string>(), 0);
     auto input_media = telegram_api::make_object<telegram_api::inputMediaPoll>(0, std::move(poll), vector<int32>(),
                                                                                nullptr, string(), Auto(), nullptr);
     send_query(G()->net_query_creator().create(
@@ -1862,10 +1862,10 @@ tl_object_ptr<telegram_api::InputMedia> PollManager::get_input_media(PollId poll
       telegram_api::make_object<telegram_api::poll>(
           0, poll_flags, poll->is_closed_, !poll->is_anonymous_, poll->allow_multiple_answers_, poll->is_quiz_,
           poll->has_open_answers_, poll->has_revoting_disabled_, poll->shuffle_answers_,
-          poll->hide_results_until_close_, true,
+          poll->hide_results_until_close_, true, false,
           get_input_text_with_entities(nullptr, poll->question_, "get_input_media_poll"),
           transform(poll->options_, [](const PollOption &poll_option) { return poll_option.get_input_poll_answer(); }),
-          poll->open_period_, poll->close_date_, 0),
+          poll->open_period_, poll->close_date_, vector<string>(), 0),
       std::move(correct_answers), nullptr, poll->explanation_.text,
       get_input_message_entities(td_->user_manager_.get(), poll->explanation_.entities, "get_input_media_poll"),
       nullptr);

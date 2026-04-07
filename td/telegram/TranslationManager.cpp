@@ -98,13 +98,15 @@ class ComposeMessageWithAiQuery final : public Td::ResultHandler {
     if (!translate_to_language_code.empty()) {
       flags |= telegram_api::messages_composeMessageWithAI::TRANSLATE_TO_LANG_MASK;
     }
+    telegram_api::object_ptr<telegram_api::InputAiComposeTone> input_tone;
     if (!tone.empty()) {
-      flags |= telegram_api::messages_composeMessageWithAI::CHANGE_TONE_MASK;
+      flags |= telegram_api::messages_composeMessageWithAI::TONE_MASK;
+      input_tone = telegram_api::make_object<telegram_api::inputAiComposeToneDefault>(tone);
     }
     send_query(G()->net_query_creator().create(telegram_api::messages_composeMessageWithAI(
         flags, false, emojify,
         get_input_text_with_entities(td_->user_manager_.get(), text.text_, "ComposeMessageWithAiQuery"),
-        translate_to_language_code, tone)));
+        translate_to_language_code, std::move(input_tone))));
   }
 
   void on_result(BufferSlice packet) final {
@@ -143,7 +145,7 @@ class ProofreadMessageWithAiQuery final : public Td::ResultHandler {
     send_query(G()->net_query_creator().create(telegram_api::messages_composeMessageWithAI(
         0, true, false,
         get_input_text_with_entities(td_->user_manager_.get(), text.text_, "ProofreadMessageWithAiQuery"), string(),
-        string())));
+        nullptr)));
   }
 
   void on_result(BufferSlice packet) final {
