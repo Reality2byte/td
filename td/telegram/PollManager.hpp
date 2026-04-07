@@ -36,6 +36,7 @@ void PollManager::Poll::store(StorerT &storer) const {
   bool has_explanation_media = explanation_media_ != nullptr;
   bool has_option_min_channels = !option_min_channels_.empty();
   bool has_recent_option_voter_min_channels = !recent_option_voter_min_channels_.empty();
+  bool has_country_codes = !country_codes_.empty();
   BEGIN_STORE_FLAGS();
   STORE_FLAG(is_closed_);
   STORE_FLAG(is_public);
@@ -62,6 +63,7 @@ void PollManager::Poll::store(StorerT &storer) const {
   STORE_FLAG(has_option_min_channels);
   STORE_FLAG(has_recent_option_voter_min_channels);
   STORE_FLAG(subscribers_only_);
+  STORE_FLAG(has_country_codes);
   END_STORE_FLAGS();
 
   store(question_.text, storer);
@@ -104,6 +106,9 @@ void PollManager::Poll::store(StorerT &storer) const {
   if (has_recent_option_voter_min_channels) {
     store(recent_option_voter_min_channels_, storer);
   }
+  if (has_country_codes) {
+    store(country_codes_, storer);
+  }
 }
 
 template <class ParserT>
@@ -123,6 +128,7 @@ void PollManager::Poll::parse(ParserT &parser) {
   bool has_explanation_media;
   bool has_option_min_channels;
   bool has_recent_option_voter_min_channels;
+  bool has_country_codes;
   BEGIN_PARSE_FLAGS();
   PARSE_FLAG(is_closed_);
   PARSE_FLAG(is_public);
@@ -149,6 +155,7 @@ void PollManager::Poll::parse(ParserT &parser) {
   PARSE_FLAG(has_option_min_channels);
   PARSE_FLAG(has_recent_option_voter_min_channels);
   PARSE_FLAG(subscribers_only_);
+  PARSE_FLAG(has_country_codes);
   END_PARSE_FLAGS();
   is_anonymous_ = !is_public;
 
@@ -209,6 +216,9 @@ void PollManager::Poll::parse(ParserT &parser) {
   if (has_recent_option_voter_min_channels) {
     parse(recent_option_voter_min_channels_, parser);
   }
+  if (has_country_codes) {
+    parse(country_codes_, parser);
+  }
 }
 
 template <class StorerT>
@@ -226,6 +236,7 @@ void PollManager::store_poll(PollId poll_id, StorerT &storer) const {
     bool has_multiple_correct_option_ids = poll->correct_option_ids_.size() > 1u;
     bool know_revoting_disabled = true;
     bool has_explanation_media = poll->explanation_media_ != nullptr;
+    bool has_country_codes = !poll->country_codes_.empty();
     BEGIN_STORE_FLAGS();
     STORE_FLAG(poll->is_closed_);
     STORE_FLAG(poll->is_anonymous_);
@@ -244,6 +255,7 @@ void PollManager::store_poll(PollId poll_id, StorerT &storer) const {
     STORE_FLAG(poll->hide_results_until_close_);
     STORE_FLAG(has_explanation_media);
     STORE_FLAG(poll->subscribers_only_);
+    STORE_FLAG(has_country_codes);
     END_STORE_FLAGS();
     store(poll->question_.text, storer);
     vector<string> options = transform(poll->options_, [](const PollOption &option) { return option.text_.text; });
@@ -273,6 +285,9 @@ void PollManager::store_poll(PollId poll_id, StorerT &storer) const {
     }
     if (has_explanation_media) {
       store_message_content(poll->explanation_media_.get(), storer);
+    }
+    if (has_country_codes) {
+      store(poll->country_codes_, storer);
     }
   }
 }
@@ -306,6 +321,8 @@ PollId PollManager::parse_poll(ParserT &parser) {
     bool hide_results_until_close = false;
     bool has_explanation_media = false;
     bool subscribers_only = false;
+    bool has_country_codes = false;
+    vector<string> country_codes;
 
     if (parser.version() >= static_cast<int32>(Version::SupportPolls2_0)) {
       BEGIN_PARSE_FLAGS();
@@ -326,6 +343,7 @@ PollId PollManager::parse_poll(ParserT &parser) {
       PARSE_FLAG(hide_results_until_close);
       PARSE_FLAG(has_explanation_media);
       PARSE_FLAG(subscribers_only);
+      PARSE_FLAG(has_country_codes);
       END_PARSE_FLAGS();
     }
     parse(question.text, parser);
@@ -376,14 +394,17 @@ PollId PollManager::parse_poll(ParserT &parser) {
     if (has_explanation_media) {
       parse_message_content(explanation_media, parser);
     }
+    if (has_country_codes) {
+      parse(country_codes, parser);
+    }
 
     if (parser.get_error() != nullptr) {
       return PollId();
     }
     return create_poll(std::move(question), std::move(options), is_anonymous, allow_multiple_answers, has_open_answers,
-                       has_revoting_disabled, subscribers_only, shuffle_answers, hide_results_until_close, is_quiz,
-                       std::move(correct_option_ids), std::move(explanation), std::move(explanation_media), open_period,
-                       close_date, is_closed);
+                       has_revoting_disabled, subscribers_only, std::move(country_codes), shuffle_answers,
+                       hide_results_until_close, is_quiz, std::move(correct_option_ids), std::move(explanation),
+                       std::move(explanation_media), open_period, close_date, is_closed);
   }
 
   auto poll = get_poll_force(poll_id);

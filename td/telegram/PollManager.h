@@ -58,10 +58,10 @@ class PollManager final : public Actor {
 
   PollId create_poll(FormattedText &&question, vector<FormattedText> &&options, bool is_anonymous,
                      bool allow_multiple_answers, bool has_open_answers, bool has_revoting_disabled,
-                     bool subscribers_only, bool shuffle_answers, bool hide_results_until_close, bool is_quiz,
-                     vector<int32> correct_option_ids, FormattedText &&explanation,
-                     unique_ptr<MessageContent> &&explanation_media, int32 open_period, int32 close_date,
-                     bool is_closed);
+                     bool subscribers_only, vector<string> &&country_codes, bool shuffle_answers,
+                     bool hide_results_until_close, bool is_quiz, vector<int32> correct_option_ids,
+                     FormattedText &&explanation, unique_ptr<MessageContent> &&explanation_media, int32 open_period,
+                     int32 close_date, bool is_closed);
 
   void register_poll(PollId poll_id, MessageFullId message_full_id, const char *source);
 
@@ -147,6 +147,7 @@ class PollManager final : public Actor {
     int32 open_period_ = 0;
     int32 close_date_ = 0;
     int64 hash_ = 0;
+    vector<string> country_codes_;
     bool is_anonymous_ = true;
     bool allow_multiple_answers_ = false;
     bool has_open_answers_ = false;

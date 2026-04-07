@@ -789,16 +789,17 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
   return td_api::make_object<td_api::poll>(
       poll_id.get(), get_formatted_text_object(nullptr, poll->question_, true, -1), std::move(poll_options),
       total_voter_count, std::move(recent_voters), can_get_voters && !poll->is_anonymous_, poll->is_anonymous_,
-      poll->allow_multiple_answers_, !poll->has_revoting_disabled_, poll->subscribers_only_, std::move(option_order),
-      std::move(poll_type), open_period, close_date, poll->is_closed_);
+      poll->allow_multiple_answers_, !poll->has_revoting_disabled_, poll->subscribers_only_,
+      vector<string>(poll->country_codes_), std::move(option_order), std::move(poll_type), open_period, close_date,
+      poll->is_closed_);
 }
 
 PollId PollManager::create_poll(FormattedText &&question, vector<FormattedText> &&options, bool is_anonymous,
                                 bool allow_multiple_answers, bool has_open_answers, bool has_revoting_disabled,
-                                bool subscribers_only, bool shuffle_answers, bool hide_results_until_close,
-                                bool is_quiz, vector<int32> correct_option_ids, FormattedText &&explanation,
-                                unique_ptr<MessageContent> &&explanation_media, int32 open_period, int32 close_date,
-                                bool is_closed) {
+                                bool subscribers_only, vector<string> &&country_codes, bool shuffle_answers,
+                                bool hide_results_until_close, bool is_quiz, vector<int32> correct_option_ids,
+                                FormattedText &&explanation, unique_ptr<MessageContent> &&explanation_media,
+                                int32 open_period, int32 close_date, bool is_closed) {
   if (is_quiz && has_open_answers) {
     LOG(ERROR) << "Receive quiz with open answers";
     has_open_answers = false;
@@ -814,6 +815,7 @@ PollId PollManager::create_poll(FormattedText &&question, vector<FormattedText> 
   poll->has_open_answers_ = has_open_answers;
   poll->has_revoting_disabled_ = has_revoting_disabled;
   poll->subscribers_only_ = subscribers_only;
+  poll->country_codes_ = std::move(country_codes);
   poll->shuffle_answers_ = shuffle_answers;
   poll->hide_results_until_close_ = hide_results_until_close;
   poll->is_quiz_ = is_quiz;
@@ -1817,9 +1819,9 @@ PollId PollManager::dup_poll(DialogId dialog_id, PollId poll_id) {
   }
   return create_poll(std::move(question), std::move(options), poll->is_anonymous_, poll->allow_multiple_answers_,
                      poll->has_open_answers_, poll->has_revoting_disabled_, poll->subscribers_only_,
-                     poll->shuffle_answers_, poll->hide_results_until_close_, poll->is_quiz_, poll->correct_option_ids_,
-                     std::move(explanation), std::move(explanation_media), poll->open_period_,
-                     poll->open_period_ == 0 ? 0 : G()->unix_time(), false);
+                     vector<string>(poll->country_codes_), poll->shuffle_answers_, poll->hide_results_until_close_,
+                     poll->is_quiz_, poll->correct_option_ids_, std::move(explanation), std::move(explanation_media),
+                     poll->open_period_, poll->open_period_ == 0 ? 0 : G()->unix_time(), false);
 }
 
 bool PollManager::has_input_media(PollId poll_id) const {
@@ -1841,6 +1843,10 @@ tl_object_ptr<telegram_api::InputMedia> PollManager::get_input_media(PollId poll
   }
   if (poll->close_date_ != 0) {
     poll_flags |= telegram_api::poll::CLOSE_DATE_MASK;
+  }
+  auto country_codes = poll->country_codes_;
+  if (!country_codes.empty()) {
+    poll_flags |= telegram_api::poll::COUNTRIES_ISO2_MASK;
   }
 
   int32 flags = 0;
@@ -1866,7 +1872,7 @@ tl_object_ptr<telegram_api::InputMedia> PollManager::get_input_media(PollId poll
           poll->hide_results_until_close_, true, poll->subscribers_only_,
           get_input_text_with_entities(nullptr, poll->question_, "get_input_media_poll"),
           transform(poll->options_, [](const PollOption &poll_option) { return poll_option.get_input_poll_answer(); }),
-          poll->open_period_, poll->close_date_, vector<string>(), 0),
+          poll->open_period_, poll->close_date_, std::move(country_codes), 0),
       std::move(correct_answers), nullptr, poll->explanation_.text,
       get_input_message_entities(td_->user_manager_.get(), poll->explanation_.entities, "get_input_media_poll"),
       nullptr);
@@ -2024,6 +2030,7 @@ PollId PollManager::on_get_poll(PollId poll_id, tl_object_ptr<telegram_api::poll
     bool shuffle_answers = poll_server->shuffle_answers_;
     bool hide_results_until_close = poll_server->hide_results_until_close_;
     bool is_quiz = poll_server->quiz_;
+    auto country_codes = std::move(poll_server->countries_iso2_);
     if (is_quiz && has_open_answers) {
       LOG(ERROR) << "Receive quiz with open answers";
       has_open_answers = false;
@@ -2046,6 +2053,10 @@ PollId PollManager::on_get_poll(PollId poll_id, tl_object_ptr<telegram_api::poll
     }
     if (subscribers_only != poll->subscribers_only_) {
       poll->subscribers_only_ = subscribers_only;
+      is_changed = true;
+    }
+    if (country_codes != poll->country_codes_) {
+      poll->country_codes_ = std::move(country_codes);
       is_changed = true;
     }
     if (hide_results_until_close != poll->hide_results_until_close_) {
