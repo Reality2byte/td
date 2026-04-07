@@ -61,6 +61,7 @@ void PollManager::Poll::store(StorerT &storer) const {
   STORE_FLAG(has_explanation_media);
   STORE_FLAG(has_option_min_channels);
   STORE_FLAG(has_recent_option_voter_min_channels);
+  STORE_FLAG(subscribers_only_);
   END_STORE_FLAGS();
 
   store(question_.text, storer);
@@ -147,6 +148,7 @@ void PollManager::Poll::parse(ParserT &parser) {
   PARSE_FLAG(has_explanation_media);
   PARSE_FLAG(has_option_min_channels);
   PARSE_FLAG(has_recent_option_voter_min_channels);
+  PARSE_FLAG(subscribers_only_);
   END_PARSE_FLAGS();
   is_anonymous_ = !is_public;
 
@@ -241,6 +243,7 @@ void PollManager::store_poll(PollId poll_id, StorerT &storer) const {
     STORE_FLAG(poll->shuffle_answers_);
     STORE_FLAG(poll->hide_results_until_close_);
     STORE_FLAG(has_explanation_media);
+    STORE_FLAG(poll->subscribers_only_);
     END_STORE_FLAGS();
     store(poll->question_.text, storer);
     vector<string> options = transform(poll->options_, [](const PollOption &option) { return option.text_.text; });
@@ -302,6 +305,7 @@ PollId PollManager::parse_poll(ParserT &parser) {
     bool shuffle_answers = false;
     bool hide_results_until_close = false;
     bool has_explanation_media = false;
+    bool subscribers_only = false;
 
     if (parser.version() >= static_cast<int32>(Version::SupportPolls2_0)) {
       BEGIN_PARSE_FLAGS();
@@ -321,6 +325,7 @@ PollId PollManager::parse_poll(ParserT &parser) {
       PARSE_FLAG(shuffle_answers);
       PARSE_FLAG(hide_results_until_close);
       PARSE_FLAG(has_explanation_media);
+      PARSE_FLAG(subscribers_only);
       END_PARSE_FLAGS();
     }
     parse(question.text, parser);
@@ -376,7 +381,7 @@ PollId PollManager::parse_poll(ParserT &parser) {
       return PollId();
     }
     return create_poll(std::move(question), std::move(options), is_anonymous, allow_multiple_answers, has_open_answers,
-                       has_revoting_disabled, shuffle_answers, hide_results_until_close, is_quiz,
+                       has_revoting_disabled, subscribers_only, shuffle_answers, hide_results_until_close, is_quiz,
                        std::move(correct_option_ids), std::move(explanation), std::move(explanation_media), open_period,
                        close_date, is_closed);
   }

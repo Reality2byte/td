@@ -58,7 +58,7 @@ class PollManager final : public Actor {
 
   PollId create_poll(FormattedText &&question, vector<FormattedText> &&options, bool is_anonymous,
                      bool allow_multiple_answers, bool has_open_answers, bool has_revoting_disabled,
-                     bool shuffle_answers, bool hide_results_until_close, bool is_quiz,
+                     bool subscribers_only, bool shuffle_answers, bool hide_results_until_close, bool is_quiz,
                      vector<int32> correct_option_ids, FormattedText &&explanation,
                      unique_ptr<MessageContent> &&explanation_media, int32 open_period, int32 close_date,
                      bool is_closed);
@@ -151,6 +151,7 @@ class PollManager final : public Actor {
     bool allow_multiple_answers_ = false;
     bool has_open_answers_ = false;
     bool has_revoting_disabled_ = false;
+    bool subscribers_only_ = false;
     bool shuffle_answers_ = false;
     bool hide_results_until_close_ = false;
     bool is_quiz_ = false;
