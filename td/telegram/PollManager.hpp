@@ -43,27 +43,28 @@ void PollManager::Poll::store(StorerT &storer) const {
   STORE_FLAG(allow_multiple_answers_);
   STORE_FLAG(is_quiz_);
   STORE_FLAG(false);
-  STORE_FLAG(has_open_period);
+  STORE_FLAG(has_open_period);  // 5
   STORE_FLAG(has_close_date);
   STORE_FLAG(has_explanation);
   STORE_FLAG(is_updated_after_close_);
   STORE_FLAG(has_recent_voter_dialog_ids);
-  STORE_FLAG(has_recent_voter_min_channels);
+  STORE_FLAG(has_recent_voter_min_channels);  // 10
   STORE_FLAG(has_question_entities);
   STORE_FLAG(has_multiple_correct_option_ids);
   STORE_FLAG(has_open_answers_);
   STORE_FLAG(know_revoting_disabled);
-  STORE_FLAG(has_revoting_disabled_);
+  STORE_FLAG(has_revoting_disabled_);  // 15
   STORE_FLAG(shuffle_answers_);
   STORE_FLAG(hide_results_until_close_);
   STORE_FLAG(is_creator_);
   STORE_FLAG(has_hash);
-  STORE_FLAG(has_unread_votes_);
+  STORE_FLAG(has_unread_votes_);  // 20
   STORE_FLAG(has_explanation_media);
   STORE_FLAG(has_option_min_channels);
   STORE_FLAG(has_recent_option_voter_min_channels);
   STORE_FLAG(subscribers_only_);
-  STORE_FLAG(has_country_codes);
+  STORE_FLAG(has_country_codes);  // 25
+  STORE_FLAG(can_view_stats_);
   END_STORE_FLAGS();
 
   store(question_.text, storer);
@@ -156,6 +157,7 @@ void PollManager::Poll::parse(ParserT &parser) {
   PARSE_FLAG(has_recent_option_voter_min_channels);
   PARSE_FLAG(subscribers_only_);
   PARSE_FLAG(has_country_codes);
+  PARSE_FLAG(can_view_stats_);
   END_PARSE_FLAGS();
   is_anonymous_ = !is_public;
 

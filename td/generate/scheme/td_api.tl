@@ -617,7 +617,8 @@ webApp short_name:string title:string description:string photo:photo animation:a
 //@options List of poll answer options
 //@total_voter_count Total number of voters, participating in the poll
 //@recent_voter_ids Identifiers of recent voters, if the poll is non-anonymous and poll results are available
-//@can_get_voters True, if the current user can get voters in the poll
+//@can_get_vote_statistics True, if the poll vote statistics are available using getPollVoteStatistics
+//@can_get_voters True, if the current user can get voters in the poll using getPollVoters
 //@is_anonymous True, if the poll is anonymous
 //@allows_multiple_answers True, if multiple answer options can be chosen simultaneously
 //@allows_revoting True, if the poll can be answered multiple times
@@ -628,7 +629,7 @@ webApp short_name:string title:string description:string photo:photo animation:a
 //@open_period Amount of time the poll will be active after creation, in seconds
 //@close_date Point in time (Unix timestamp) when the poll will automatically be closed
 //@is_closed True, if the poll is closed
-poll id:int64 question:formattedText options:vector<pollOption> total_voter_count:int32 recent_voter_ids:vector<MessageSender> can_get_voters:Bool is_anonymous:Bool allows_multiple_answers:Bool allows_revoting:Bool member_only:Bool country_codes:vector<string> option_order:vector<int32> type:PollType open_period:int32 close_date:int32 is_closed:Bool = Poll;
+poll id:int64 question:formattedText options:vector<pollOption> total_voter_count:int32 recent_voter_ids:vector<MessageSender> can_get_vote_statistics:Bool can_get_voters:Bool is_anonymous:Bool allows_multiple_answers:Bool allows_revoting:Bool member_only:Bool country_codes:vector<string> option_order:vector<int32> type:PollType open_period:int32 close_date:int32 is_closed:Bool = Poll;
 
 
 //@description Describes an alternative re-encoded quality of a video file

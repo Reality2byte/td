@@ -160,6 +160,7 @@ class PollManager final : public Actor {
     bool is_updated_after_close_ = false;
     bool is_creator_ = false;
     bool has_unread_votes_ = false;
+    bool can_view_stats_ = false;
     mutable bool was_saved_ = false;
 
     template <class StorerT>

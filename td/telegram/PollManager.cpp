@@ -788,8 +788,8 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
 
   return td_api::make_object<td_api::poll>(
       poll_id.get(), get_formatted_text_object(nullptr, poll->question_, true, -1), std::move(poll_options),
-      total_voter_count, std::move(recent_voters), can_get_voters && !poll->is_anonymous_, poll->is_anonymous_,
-      poll->allow_multiple_answers_, !poll->has_revoting_disabled_, poll->subscribers_only_,
+      total_voter_count, std::move(recent_voters), poll->can_view_stats_, can_get_voters && !poll->is_anonymous_,
+      poll->is_anonymous_, poll->allow_multiple_answers_, !poll->has_revoting_disabled_, poll->subscribers_only_,
       vector<string>(poll->country_codes_), std::move(option_order), std::move(poll_type), open_period, close_date,
       poll->is_closed_);
 }
@@ -826,6 +826,7 @@ PollId PollManager::create_poll(FormattedText &&question, vector<FormattedText> 
   poll->close_date_ = close_date;
   poll->is_closed_ = is_closed;
   poll->is_creator_ = true;
+  poll->can_view_stats_ = false;
 
   PollId poll_id(--current_local_poll_id_);
   CHECK(is_local_poll_id(poll_id));
@@ -2183,6 +2184,10 @@ PollId PollManager::on_get_poll(PollId poll_id, tl_object_ptr<telegram_api::poll
       need_save_to_database = true;
       notify_on_poll_has_unread_votes_update(poll_id, poll->has_unread_votes_);
     }
+  }
+  if (!is_min && poll_results->can_view_stats_ != poll->can_view_stats_) {
+    poll->can_view_stats_ = poll_results->can_view_stats_;
+    is_changed = true;
   }
 
   auto explanation = get_formatted_text(td_->user_manager_.get(), std::move(poll_results->solution_),
