@@ -7246,6 +7246,12 @@ class CliClient final : public Actor {
       string limit;
       get_args(args, chat_id, message_id, option_id, offset, limit);
       send_request(td_api::make_object<td_api::getPollVoters>(chat_id, message_id, option_id, offset, as_limit(limit)));
+    } else if (op == "gpvst") {
+      ChatId chat_id;
+      MessageId message_id;
+      bool is_dark;
+      get_args(args, chat_id, message_id, is_dark);
+      send_request(td_api::make_object<td_api::getPollVoteStatistics>(chat_id, message_id, is_dark));
     } else if (op == "stoppoll") {
       ChatId chat_id;
       MessageId message_id;

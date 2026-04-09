@@ -7806,6 +7806,13 @@ void Requests::on_request(uint64 id, const td_api::getPollVoters &request) {
                                       request.offset_, request.limit_, std::move(promise));
 }
 
+void Requests::on_request(uint64 id, const td_api::getPollVoteStatistics &request) {
+  CHECK_IS_USER();
+  CREATE_REQUEST_PROMISE();
+  td_->statistics_manager_->get_poll_statistics({DialogId(request.chat_id_), MessageId(request.message_id_)},
+                                                request.is_dark_, std::move(promise));
+}
+
 void Requests::on_request(uint64 id, td_api::stopPoll &request) {
   CREATE_OK_REQUEST_PROMISE();
   td_->poll_manager_->stop_poll({DialogId(request.chat_id_), MessageId(request.message_id_)},
