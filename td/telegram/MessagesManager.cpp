@@ -8103,6 +8103,23 @@ bool MessagesManager::can_get_message_statistics(DialogId dialog_id, const Messa
   return td_->chat_manager_->can_get_channel_message_statistics(dialog_id.get_channel_id());
 }
 
+bool MessagesManager::can_get_message_poll_vote_statistics(MessageFullId message_full_id) {
+  return can_get_message_poll_vote_statistics(message_full_id.get_dialog_id(),
+                                              get_message_force(message_full_id, "can_get_message_statistics"));
+}
+
+bool MessagesManager::can_get_message_poll_vote_statistics(DialogId dialog_id, const Message *m) const {
+  if (td_->auth_manager_->is_bot()) {
+    return false;
+  }
+  if (m == nullptr || !m->message_id.is_server() || m->content->get_type() != MessageContentType::Poll ||
+      m->forward_info != nullptr || m->had_forward_info ||
+      !td_->dialog_manager_->have_input_peer(dialog_id, false, AccessRights::Read)) {
+    return false;
+  }
+  return get_message_content_poll_can_view_stats(td_, m->content.get());
+}
+
 bool MessagesManager::can_get_message_author(DialogId dialog_id, const Message *m) const {
   if (td_->auth_manager_->is_bot() || !td_->dialog_manager_->is_admined_monoforum_channel(dialog_id)) {
     return false;
@@ -15084,6 +15101,7 @@ void MessagesManager::get_message_properties(DialogId dialog_id, MessageId messa
   auto can_get_author = can_get_message_author(dialog_id, m);
   auto can_get_statistics = can_get_message_statistics(dialog_id, m);
   auto can_get_message_thread = get_top_thread_message_full_id(d, m, false).is_ok();
+  auto can_get_poll_vote_statistics = can_get_message_poll_vote_statistics(dialog_id, m);
   auto can_get_read_date = can_get_message_read_date(d, m).is_ok();
   auto can_get_video_advertisements = can_get_message_video_advertisements(dialog_id, m);
   auto can_get_viewers = can_get_message_viewers(dialog_id, m).is_ok();
@@ -15113,10 +15131,10 @@ void MessagesManager::get_message_properties(DialogId dialog_id, MessageId messa
       can_delete_for_self, can_delete_for_all_users, can_be_edited, can_be_forwarded, can_be_paid, can_be_pinned,
       can_be_replied, can_be_replied_in_another_chat, can_be_saved, can_be_shared_in_story, can_edit_media,
       can_edit_scheduling_state, can_edit_suggested_post_info, can_get_author, can_get_embedding_code, can_get_link,
-      can_get_media_timestamp_links, can_get_message_thread, can_get_read_date, can_get_statistics,
-      can_get_video_advertisements, can_get_viewers, can_mark_tasks_as_done, can_recognize_speech, can_report_chat,
-      can_report_reactions, can_report_supergroup_spam, can_set_fact_check, has_protected_content_by_current_user,
-      has_protected_content_by_other_user, need_show_statistics));
+      can_get_media_timestamp_links, can_get_message_thread, can_get_poll_vote_statistics, can_get_read_date,
+      can_get_statistics, can_get_video_advertisements, can_get_viewers, can_mark_tasks_as_done, can_recognize_speech,
+      can_report_chat, can_report_reactions, can_report_supergroup_spam, can_set_fact_check,
+      has_protected_content_by_current_user, has_protected_content_by_other_user, need_show_statistics));
 }
 
 void MessagesManager::get_poll_option_properties(DialogId dialog_id, MessageId message_id, const string &option_id,

@@ -6862,6 +6862,15 @@ bool get_message_content_poll_can_add_option(const Td *td, const MessageContent 
   }
 }
 
+bool get_message_content_poll_can_view_stats(const Td *td, const MessageContent *content) {
+  switch (content->get_type()) {
+    case MessageContentType::Poll:
+      return td->poll_manager_->get_poll_can_view_stats(static_cast<const MessagePoll *>(content)->poll_id);
+    default:
+      return false;
+  }
+}
+
 bool get_message_content_poll_has_unread_votes(const Td *td, const MessageContent *content) {
   switch (content->get_type()) {
     case MessageContentType::Poll:

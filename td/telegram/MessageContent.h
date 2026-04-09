@@ -198,6 +198,8 @@ bool get_message_content_poll_is_closed(const Td *td, const MessageContent *cont
 
 bool get_message_content_poll_can_add_option(const Td *td, const MessageContent *content);
 
+bool get_message_content_poll_can_view_stats(const Td *td, const MessageContent *content);
+
 bool get_message_content_poll_has_unread_votes(const Td *td, const MessageContent *content);
 
 void remove_message_content_poll_has_unread_votes(Td *td, const MessageContent *content);

@@ -788,8 +788,8 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
 
   return td_api::make_object<td_api::poll>(
       poll_id.get(), get_formatted_text_object(nullptr, poll->question_, true, -1), std::move(poll_options),
-      total_voter_count, std::move(recent_voters), poll->can_view_stats_, can_get_voters && !poll->is_anonymous_,
-      poll->is_anonymous_, poll->allow_multiple_answers_, !poll->has_revoting_disabled_, poll->subscribers_only_,
+      total_voter_count, std::move(recent_voters), can_get_voters && !poll->is_anonymous_, poll->is_anonymous_,
+      poll->allow_multiple_answers_, !poll->has_revoting_disabled_, poll->subscribers_only_,
       vector<string>(poll->country_codes_), std::move(option_order), std::move(poll_type), open_period, close_date,
       poll->is_closed_);
 }
@@ -964,6 +964,12 @@ bool PollManager::get_poll_can_add_option(PollId poll_id) const {
   CHECK(poll != nullptr);
   return poll->has_open_answers_ && !poll->is_closed_ &&
          static_cast<int64>(poll->options_.size()) < td_->option_manager_->get_option_integer("poll_answer_count_max");
+}
+
+bool PollManager::get_poll_can_view_stats(PollId poll_id) const {
+  auto poll = get_poll(poll_id);
+  CHECK(poll != nullptr);
+  return poll->can_view_stats_;
 }
 
 bool PollManager::get_poll_has_unread_votes(PollId poll_id) const {
