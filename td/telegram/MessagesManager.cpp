@@ -5209,9 +5209,9 @@ void MessagesManager::on_unread_message_reaction_removed(Dialog *d, const Messag
     }
   } else {
     set_dialog_unread_reaction_count(d, d->unread_reaction_count - 1);
-    send_update_message_unread_reactions(d->dialog_id, m, d->unread_reaction_count);
     on_dialog_updated(d->dialog_id, "on_unread_message_reaction_removed");
   }
+  send_update_message_unread_reactions(d->dialog_id, m, d->unread_reaction_count);
 }
 
 bool MessagesManager::remove_message_unread_reactions(Dialog *d, Message *m, const char *source) {
@@ -5259,9 +5259,9 @@ void MessagesManager::on_unread_poll_vote_removed(Dialog *d, const Message *m, c
     }
   } else {
     set_dialog_unread_poll_vote_count(d, d->unread_poll_vote_count - 1);
-    send_update_message_contains_unread_poll_votes(d->dialog_id, m, d->unread_poll_vote_count);
     on_dialog_updated(d->dialog_id, "on_unread_poll_vote_removed");
   }
+  send_update_message_contains_unread_poll_votes(d->dialog_id, m, d->unread_poll_vote_count);
 }
 
 bool MessagesManager::remove_message_unread_poll_votes(Dialog *d, Message *m, const char *source) {
