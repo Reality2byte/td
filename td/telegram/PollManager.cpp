@@ -19,6 +19,7 @@
 #include "td/telegram/MessageContent.h"
 #include "td/telegram/MessageCopyOptions.h"
 #include "td/telegram/MessageId.h"
+#include "td/telegram/MessageQueryManager.h"
 #include "td/telegram/MessageSender.h"
 #include "td/telegram/MessagesManager.h"
 #include "td/telegram/OnlineManager.h"
@@ -2182,13 +2183,23 @@ PollId PollManager::on_get_poll(PollId poll_id, tl_object_ptr<telegram_api::poll
       poll->total_voter_count_ = max_total_voter_count;
     }
   }
-  if (!is_min && poll_results->has_unread_votes_ != poll->has_unread_votes_) {
+  if (!is_min && !td_->auth_manager_->is_bot() && poll_results->has_unread_votes_ != poll->has_unread_votes_) {
     if (!poll->is_creator_) {
       LOG(ERROR) << "Have unread votes for a non-created " << poll_id;
     } else {
-      poll->has_unread_votes_ = poll_results->has_unread_votes_;
-      need_save_to_database = true;
-      notify_on_poll_has_unread_votes_update(poll_id, poll->has_unread_votes_);
+      bool has_penqing_query = false;
+      if (server_poll_messages_.count(poll_id) > 0) {
+        server_poll_messages_[poll_id].foreach([&](const MessageFullId &message_full_id) {
+          if (td_->message_query_manager_->has_message_pending_read_poll_votes(message_full_id)) {
+            has_penqing_query = true;
+          }
+        });
+      }
+      if (!has_penqing_query) {
+        poll->has_unread_votes_ = poll_results->has_unread_votes_;
+        need_save_to_database = true;
+        notify_on_poll_has_unread_votes_update(poll_id, poll->has_unread_votes_);
+      }
     }
   }
   if (!is_min && poll_results->can_view_stats_ != poll->can_view_stats_) {
