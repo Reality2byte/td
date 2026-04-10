@@ -4900,8 +4900,8 @@ static Result<InputMessageContent> create_input_message_content(
       if (utf8_length(question.text) > MAX_POLL_QUESTION_LENGTH) {
         return Status::Error(400, PSLICE() << "Poll question length must not exceed " << MAX_POLL_QUESTION_LENGTH);
       }
-      if (input_poll->options_.size() <= 1) {
-        return Status::Error(400, "Poll must have at least 2 option");
+      if (input_poll->options_.empty()) {
+        return Status::Error(400, "Poll must have at least one answer option");
       }
       if (static_cast<int64>(input_poll->options_.size()) > max_poll_options) {
         return Status::Error(400, PSLICE() << "Poll can't have more than " << max_poll_options << " options");

@@ -5605,7 +5605,7 @@ inputMessageInvoice invoice:invoice title:string description:string photo_url:st
 
 //@description A message with a poll. Polls can't be sent to secret chats and channel direct messages chats. Polls can be sent to a private chat only if the chat is a chat with a bot or the Saved Messages chat
 //@question Poll question; 1-255 characters (up to 300 characters for bots). Only custom emoji entities are allowed to be added and only by Premium users
-//@options List of poll answer options; 2-getOption("poll_answer_count_max") options
+//@options List of poll answer options; 1-getOption("poll_answer_count_max") options
 //@param_description Poll description; pass null to use an empty description; 0-getOption("message_caption_length_max") characters
 //@is_anonymous True, if the poll voters are anonymous. Non-anonymous polls can't be sent or forwarded to channels
 //@allows_multiple_answers True, if multiple answer options can be chosen simultaneously
