@@ -5253,7 +5253,7 @@ void MessagesManager::on_unread_poll_vote_removed(Dialog *d, const Message *m, c
                                                                 get_message_forum_topic_id(d->dialog_id, m), -1, true);
   }
   if (d->unread_poll_vote_count == 0) {
-    if (is_dialog_inited(d)) {
+    if (is_dialog_inited(d) && source != nullptr) {
       // can happen after local read of all poll votes in the topic or chat
       LOG(INFO) << "Unread poll vote count of " << d->dialog_id << " became negative from " << source;
     }
@@ -8967,18 +8967,30 @@ void MessagesManager::read_all_dialog_reactions(DialogId dialog_id, ForumTopicId
   td_->message_query_manager_->read_all_dialog_reactions_on_server(dialog_id, 0, std::move(promise));
 }
 
-bool MessagesManager::read_all_local_dialog_poll_votes(DialogId dialog_id, ForumTopicId forum_topic_id) {
+void MessagesManager::read_all_local_dialog_poll_votes(DialogId dialog_id, ForumTopicId forum_topic_id) {
   if (td_->auth_manager_->is_bot()) {
-    return false;
+    return;
   }
   auto *d = get_dialog(dialog_id);
   if (d == nullptr) {
-    return false;
+    return;
   }
+
   auto message_ids = find_dialog_messages(d, [this, dialog_id, forum_topic_id](const Message *m) {
     return has_unread_poll_votes(dialog_id, m) &&
            (!forum_topic_id.is_valid() || get_message_forum_topic_id(dialog_id, m) == forum_topic_id);
   });
+
+  if (forum_topic_id.is_valid()) {
+    td_->forum_topic_manager_->on_topic_poll_vote_count_changed(dialog_id, forum_topic_id, 0, false);
+  } else {
+    if (d->unread_poll_vote_count != 0) {
+      set_dialog_unread_poll_vote_count(d, 0);
+      if (message_ids.empty()) {
+        send_update_chat_unread_poll_vote_count(d, "read_all_local_dialog_poll_votes");
+      }
+    }
+  }
 
   LOG(INFO) << "Found " << message_ids.size() << " messages with unread poll votes in memory";
   for (auto message_id : message_ids) {
@@ -8989,9 +9001,8 @@ bool MessagesManager::read_all_local_dialog_poll_votes(DialogId dialog_id, Forum
     CHECK(m->message_id.is_valid());
     // remove_message_notification_id(d, m, true, false);  // must be called while has_unread_poll_votes
     remove_message_content_poll_has_unread_votes(td_, m->content.get());
-    on_unread_poll_vote_removed(d, m, "read_all_local_dialog_poll_votes");
+    on_unread_poll_vote_removed(d, m, nullptr);
   }
-  return !message_ids.empty();
 }
 
 void MessagesManager::read_all_dialog_poll_votes(DialogId dialog_id, ForumTopicId forum_topic_id,
@@ -9000,27 +9011,20 @@ void MessagesManager::read_all_dialog_poll_votes(DialogId dialog_id, ForumTopicI
                      check_dialog_access(dialog_id, true, AccessRights::Read, "read_all_dialog_poll_votes"));
   TRY_STATUS_PROMISE(promise, can_use_forum_topic_id(d, forum_topic_id));
 
+  LOG(INFO) << "Receive readAllChatPollVotes request in " << dialog_id << " with " << d->unread_poll_vote_count
+            << " unread poll votes";
+
   read_all_local_dialog_poll_votes(dialog_id, forum_topic_id);
   if (forum_topic_id.is_valid()) {
     LOG(INFO) << "Receive readAllChatPollVotes request in " << forum_topic_id << " in " << dialog_id;
-    td_->forum_topic_manager_->on_topic_poll_vote_count_changed(dialog_id, forum_topic_id, 0, false);
     return td_->message_query_manager_->read_all_dialog_poll_votes_on_server(dialog_id, forum_topic_id, 0,
                                                                              std::move(promise));
   }
-
-  LOG(INFO) << "Receive readAllChatPollVotes request in " << dialog_id << " with " << d->unread_poll_vote_count
-            << " unread poll votes";
 
   if (dialog_id.get_type() == DialogType::SecretChat) {
     CHECK(d->unread_poll_vote_count == 0);
     return promise.set_value(Unit());
   }
-
-  if (d->unread_poll_vote_count != 0) {
-    set_dialog_unread_poll_vote_count(d, 0);
-    send_update_chat_unread_poll_vote_count(d, "read_all_dialog_poll_votes");
-  }
-  // remove_message_dialog_notifications(d, MessageId::max(), true, "read_all_dialog_poll_votes");
 
   td_->message_query_manager_->read_all_dialog_poll_votes_on_server(dialog_id, ForumTopicId(), 0, std::move(promise));
 }
