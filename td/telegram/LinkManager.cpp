@@ -1117,6 +1117,12 @@ class LinkManager::InternalLinkRequestManagedBot final : public InternalLink {
   string bot_name_;
 
   td_api::object_ptr<td_api::InternalLinkType> get_internal_link_type_object() const final {
+    auto size = bot_username_.size();
+    if (size < 3u || to_lower(bot_username_[size - 3]) != 'b' || to_lower(bot_username_[size - 2]) != 'o' ||
+        to_lower(bot_username_[size - 1]) != 't') {
+      return td_api::make_object<td_api::internalLinkTypeRequestManagedBot>(
+          manager_bot_username_, PSTRING() << bot_username_ << "bot", bot_name_);
+    }
     return td_api::make_object<td_api::internalLinkTypeRequestManagedBot>(manager_bot_username_, bot_username_,
                                                                           bot_name_);
   }
@@ -2530,7 +2536,7 @@ unique_ptr<LinkManager::InternalLink> LinkManager::parse_tg_link_query(Slice que
     // newbot?manager=<manager_bot_username>&username=<new_bot_username>&name=<new_bot_name>
     auto manager_bot_username = get_arg("manager");
     auto new_bot_username = get_arg("username");
-    if (is_valid_username(manager_bot_username) && is_valid_username(new_bot_username)) {
+    if (is_valid_username(manager_bot_username) && (new_bot_username.empty() || is_valid_username(new_bot_username))) {
       return td::make_unique<InternalLinkRequestManagedBot>(std::move(manager_bot_username),
                                                             std::move(new_bot_username), get_arg("name"));
     }
@@ -2744,9 +2750,13 @@ unique_ptr<LinkManager::InternalLink> LinkManager::parse_t_me_link_query(Slice q
       return td::make_unique<InternalLinkInstantView>(
           PSTRING() << get_t_me_url() << "iv" << copy_arg("url") << copy_arg("rhash"), get_arg("url"));
     }
-  } else if (path.size() >= 3u && path[0] == "newbot" && is_valid_username(path[1]) && is_valid_username(path[2])) {
+  } else if (path.size() >= 3u && path[0] == "newbot" && is_valid_username(path[1]) &&
+             (path[2].empty() || is_valid_username(path[2]))) {
     // /newbot/<manager_bot_username>/<new_bot_username>?name=<new_bot_name>
     return td::make_unique<InternalLinkRequestManagedBot>(string(path[1]), string(path[2]), get_arg("name"));
+  } else if (path.size() == 2u && path[0] == "newbot" && is_valid_username(path[1])) {
+    // /newbot/<manager_bot_username>?name=<new_bot_name>
+    return td::make_unique<InternalLinkRequestManagedBot>(string(path[1]), string(), get_arg("name"));
   } else if (is_valid_username(path[0]) && path[0] != "i") {
     if (path.size() >= 2 && to_integer<int64>(path[1]) > 0) {
       // /<username>/12345?single&thread=<thread_id>&comment=<message_id>&t=<media_timestamp>

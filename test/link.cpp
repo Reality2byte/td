@@ -1837,8 +1837,13 @@ TEST(Link, parse_internal_link_part4) {
 
   parse_internal_link("t.me/newbot/0manager/tesager?name=", public_chat("newbot"));
   parse_internal_link("t.me/newbot/manager/0testbot?name=", public_chat("newbot"));
+  parse_internal_link("t.me/newbot/manager", request_managed_bot("manager", "bot", ""));
+  parse_internal_link("t.me/newbot/manager?name=asd", request_managed_bot("manager", "bot", "asd"));
+  parse_internal_link("t.me/newbot/manager/a?name=asd", request_managed_bot("manager", "abot", "asd"));
   parse_internal_link("t.me/newbot/manager/testbot?name=", request_managed_bot("manager", "testbot", ""));
   parse_internal_link("t.me/newbot/manager/testbot?name=asd", request_managed_bot("manager", "testbot", "asd"));
+  parse_internal_link("t.me/newbot/manager/testBot?name=asd", request_managed_bot("manager", "testBot", "asd"));
+  parse_internal_link("t.me/newbot/manager/testbOt?name=asd", request_managed_bot("manager", "testbOt", "asd"));
 
   parse_internal_link("tg:newbot?manager=managerot&username=testbot&name=asd",
                       request_managed_bot("managerot", "testbot", "asd"));
