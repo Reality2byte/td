@@ -1384,7 +1384,7 @@ class Requests {
 
   void on_request(uint64 id, const td_api::isProfileAudio &request);
 
-  void on_request(uint64 id, const td_api::addProfileAudio &request);
+  void on_request(uint64 id, td_api::addProfileAudio &request);
 
   void on_request(uint64 id, const td_api::setProfileAudioPosition &request);
 

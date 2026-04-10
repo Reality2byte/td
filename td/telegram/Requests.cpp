@@ -6840,10 +6840,13 @@ void Requests::on_request(uint64 id, const td_api::isProfileAudio &request) {
   td_->user_manager_->is_saved_music(FileId(request.file_id_, 0), std::move(promise));
 }
 
-void Requests::on_request(uint64 id, const td_api::addProfileAudio &request) {
+void Requests::on_request(uint64 id, td_api::addProfileAudio &request) {
   CHECK_IS_USER();
+  CLEAN_INPUT_STRING(request.title_);
+  CLEAN_INPUT_STRING(request.performer_);
   CREATE_OK_REQUEST_PROMISE();
-  td_->user_manager_->add_saved_music(FileId(request.file_id_, 0), FileId(), std::move(promise));
+  td_->user_manager_->add_new_saved_music(request.audio_, request.duration_, request.title_, request.performer_,
+                                          std::move(promise));
 }
 
 void Requests::on_request(uint64 id, const td_api::setProfileAudioPosition &request) {

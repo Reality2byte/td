@@ -4082,9 +4082,12 @@ class CliClient final : public Actor {
       get_args(args, file_id);
       send_request(td_api::make_object<td_api::isProfileAudio>(as_file_id(file_id)));
     } else if (op == "apa") {
-      string file_id;
-      get_args(args, file_id);
-      send_request(td_api::make_object<td_api::addProfileAudio>(as_file_id(file_id)));
+      string audio;
+      int32 duration;
+      string title;
+      string performer;
+      get_args(args, audio, duration, title, performer);
+      send_request(td_api::make_object<td_api::addProfileAudio>(as_input_file(audio), duration, title, performer));
     } else if (op == "spap") {
       string file_id;
       string after_file_id;
