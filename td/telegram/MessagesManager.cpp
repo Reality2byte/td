@@ -20237,7 +20237,7 @@ td_api::object_ptr<td_api::message> MessagesManager::get_dialog_event_log_messag
   return td_api::make_object<td_api::message>(
       m->message_id.get(), std::move(sender), get_chat_id_object(dialog_id, "get_dialog_event_log_message_object"),
       nullptr, nullptr, m->is_outgoing, m->is_pinned, m->is_from_offline, can_be_saved, true, m->is_channel_post,
-      m->is_paid_suggested_post_stars, m->is_paid_suggested_post_ton, false, m->date, edit_date,
+      m->is_paid_suggested_post_stars, m->is_paid_suggested_post_ton, false, false, m->date, edit_date,
       std::move(forward_info), std::move(import_info), std::move(interaction_info), Auto(), nullptr, nullptr,
       std::move(reply_to), nullptr, nullptr, 0.0, 0.0, via_bot_user_id, 0, m->sender_boost_count, m->sender_rank,
       m->paid_message_star_count, m->author_signature, 0, 0, get_restriction_info_object(m->restriction_reasons),
@@ -20306,7 +20306,7 @@ td_api::object_ptr<td_api::message> MessagesManager::get_business_message_messag
   return td_api::make_object<td_api::message>(
       m->message_id.get(), std::move(sender), get_chat_id_object(dialog_id, "get_business_message_message_object"),
       nullptr, nullptr, m->is_outgoing, false, m->is_from_offline, can_be_saved, false, false, false, false, false,
-      m->date, m->edit_date, std::move(forward_info), std::move(import_info), nullptr, Auto(), nullptr, nullptr,
+      false, m->date, m->edit_date, std::move(forward_info), std::move(import_info), nullptr, Auto(), nullptr, nullptr,
       std::move(reply_to), nullptr, std::move(self_destruct_type), 0.0, 0.0, via_bot_user_id, via_business_bot_user_id,
       m->sender_boost_count, m->sender_rank, m->paid_message_star_count, string(), m->media_album_id,
       m->effect_id.get(), get_restriction_info_object(m->restriction_reasons), string(), std::move(content),
@@ -20398,14 +20398,15 @@ td_api::object_ptr<td_api::message> MessagesManager::get_message_object(DialogId
   auto reply_markup = get_reply_markup_object(td_->user_manager_.get(), m->reply_markup);
   auto content = get_message_message_content_object(dialog_id, m);
   auto self_destruct_type = m->ttl.get_message_self_destruct_type_object();
+  auto contains_unread_poll_votes = has_unread_poll_votes(dialog_id, m);
 
   return td_api::make_object<td_api::message>(
       m->message_id.get(), std::move(sender), get_chat_id_object(dialog_id, "get_message_object"),
       std::move(sending_state), std::move(scheduling_state), is_outgoing, m->is_pinned, m->is_from_offline,
       can_be_saved, has_timestamped_media, m->is_channel_post, m->is_paid_suggested_post_stars,
-      m->is_paid_suggested_post_ton, m->contains_unread_mention, date, edit_date, std::move(forward_info),
-      std::move(import_info), std::move(interaction_info), std::move(unread_reactions), std::move(fact_check),
-      std::move(suggested_post), std::move(reply_to), topic.get_message_topic_object(td_),
+      m->is_paid_suggested_post_ton, m->contains_unread_mention, contains_unread_poll_votes, date, edit_date,
+      std::move(forward_info), std::move(import_info), std::move(interaction_info), std::move(unread_reactions),
+      std::move(fact_check), std::move(suggested_post), std::move(reply_to), topic.get_message_topic_object(td_),
       std::move(self_destruct_type), ttl_expires_in, auto_delete_in, via_bot_user_id, via_business_bot_user_id,
       m->sender_boost_count, m->sender_rank, m->paid_message_star_count, m->author_signature, m->media_album_id,
       m->effect_id.get(), get_restriction_info_object(m->restriction_reasons), m->summary_from_language,
