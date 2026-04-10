@@ -8900,14 +8900,14 @@ void MessagesManager::read_all_dialog_mentions(DialogId dialog_id, ForumTopicId 
   td_->message_query_manager_->read_all_dialog_mentions_on_server(dialog_id, 0, std::move(promise));
 }
 
-bool MessagesManager::read_all_local_dialog_reactions(DialogId dialog_id, ForumTopicId forum_topic_id,
+void MessagesManager::read_all_local_dialog_reactions(DialogId dialog_id, ForumTopicId forum_topic_id,
                                                       SavedMessagesTopicId saved_messages_topic_id) {
   if (td_->auth_manager_->is_bot()) {
-    return false;
+    return;
   }
   auto *d = get_dialog(dialog_id);
   if (d == nullptr) {
-    return false;
+    return;
   }
   auto message_ids =
       find_dialog_messages(d, [this, dialog_id, forum_topic_id, saved_messages_topic_id](const Message *m) {
@@ -8915,6 +8915,21 @@ bool MessagesManager::read_all_local_dialog_reactions(DialogId dialog_id, ForumT
                (!forum_topic_id.is_valid() || get_message_forum_topic_id(dialog_id, m) == forum_topic_id) &&
                (!saved_messages_topic_id.is_valid() || m->saved_messages_topic_id == saved_messages_topic_id);
       });
+
+  if (forum_topic_id.is_valid()) {
+    td_->forum_topic_manager_->on_topic_reaction_count_changed(dialog_id, forum_topic_id, 0, false);
+  } else if (saved_messages_topic_id.is_valid()) {
+    // do nothing, the counter was reset by the caller
+  } else {
+    if (d->unread_reaction_count != 0) {
+      set_dialog_unread_reaction_count(d, 0);
+      if (message_ids.empty()) {
+        send_update_chat_unread_reaction_count(d, "read_all_local_dialog_reactions");
+      } else {
+        on_dialog_updated(dialog_id, "read_all_local_dialog_reactions");
+      }
+    }
+  }
 
   LOG(INFO) << "Found " << message_ids.size() << " messages with unread reactions in memory";
   for (auto message_id : message_ids) {
@@ -8926,10 +8941,9 @@ bool MessagesManager::read_all_local_dialog_reactions(DialogId dialog_id, ForumT
     // remove_message_notification_id(d, m, true, false);  // must be called before unread_reactions are cleared
     m->reactions->unread_reactions_.clear();
 
-    send_update_message_unread_reactions(dialog_id, m, 0);
+    on_unread_message_reaction_removed(d, m, nullptr);
     on_message_changed(d, m, true, "read_all_local_dialog_reactions");
   }
-  return !message_ids.empty();
 }
 
 void MessagesManager::read_all_dialog_reactions(DialogId dialog_id, ForumTopicId forum_topic_id,
@@ -8937,10 +8951,9 @@ void MessagesManager::read_all_dialog_reactions(DialogId dialog_id, ForumTopicId
   TRY_RESULT_PROMISE(promise, d, check_dialog_access(dialog_id, true, AccessRights::Read, "read_all_dialog_reactions"));
   TRY_STATUS_PROMISE(promise, can_use_forum_topic_id(d, forum_topic_id));
 
-  auto is_update_sent = read_all_local_dialog_reactions(dialog_id, forum_topic_id, SavedMessagesTopicId());
+  read_all_local_dialog_reactions(dialog_id, forum_topic_id, SavedMessagesTopicId());
   if (forum_topic_id.is_valid()) {
     LOG(INFO) << "Receive readAllChatReactions request in " << forum_topic_id << " in " << dialog_id;
-    td_->forum_topic_manager_->on_topic_reaction_count_changed(dialog_id, forum_topic_id, 0, false);
     return td_->message_query_manager_->read_all_topic_reactions_on_server(
         dialog_id, forum_topic_id, SavedMessagesTopicId(), 0, std::move(promise));
   }
@@ -8953,15 +8966,6 @@ void MessagesManager::read_all_dialog_reactions(DialogId dialog_id, ForumTopicId
     return promise.set_value(Unit());
   }
 
-  if (d->unread_reaction_count != 0) {
-    set_dialog_unread_reaction_count(d, 0);
-    if (!is_update_sent) {
-      send_update_chat_unread_reaction_count(d, "read_all_dialog_reactions");
-    } else {
-      LOG(INFO) << "Update unread reaction message count in " << dialog_id << " to " << d->unread_reaction_count;
-      on_dialog_updated(dialog_id, "read_all_dialog_reactions");
-    }
-  }
   // remove_message_dialog_notifications(d, MessageId::max(), true, "read_all_dialog_reactions");
 
   td_->message_query_manager_->read_all_dialog_reactions_on_server(dialog_id, 0, std::move(promise));
@@ -8988,6 +8992,8 @@ void MessagesManager::read_all_local_dialog_poll_votes(DialogId dialog_id, Forum
       set_dialog_unread_poll_vote_count(d, 0);
       if (message_ids.empty()) {
         send_update_chat_unread_poll_vote_count(d, "read_all_local_dialog_poll_votes");
+      } else {
+        on_dialog_updated(dialog_id, "read_all_local_dialog_poll_votes");
       }
     }
   }
