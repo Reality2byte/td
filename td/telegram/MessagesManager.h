@@ -2389,6 +2389,9 @@ class MessagesManager final : public Actor {
 
   void send_update_message_unread_reactions(DialogId dialog_id, const Message *m, int32 unread_reaction_count) const;
 
+  void send_update_message_contains_unread_poll_votes(DialogId dialog_id, const Message *m,
+                                                      int32 unread_poll_vote_count) const;
+
   void send_update_message_live_location_viewed(MessageFullId message_full_id);
 
   void send_update_active_live_location_messages();

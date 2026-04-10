@@ -9795,8 +9795,15 @@ updateMessageMentionRead chat_id:int53 message_id:int53 unread_mention_count:int
 //@chat_id Chat identifier
 //@message_id Message identifier
 //@unread_reactions The new list of unread reactions
-//@unread_reaction_count The new number of messages with unread reactions left in the chat
+//@unread_reaction_count The new number of messages with unread reactions in the chat
 updateMessageUnreadReactions chat_id:int53 message_id:int53 unread_reactions:vector<unreadReaction> unread_reaction_count:int32 = Update;
+
+//@description Unread votes were added or removed from a poll message
+//@chat_id Chat identifier
+//@message_id Message identifier
+//@contains_unread_poll_votes True, if the message is a poll message with unread votes
+//@unread_poll_vote_count The new number of messages with unread poll votes in the chat
+updateMessageContainsUnreadPollVotes chat_id:int53 message_id:int53 contains_unread_poll_votes:Bool unread_poll_vote_count:int32 = Update;
 
 //@description A fact-check added to a message was changed
 //@chat_id Chat identifier

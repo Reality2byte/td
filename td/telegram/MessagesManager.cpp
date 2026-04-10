@@ -5126,6 +5126,7 @@ void MessagesManager::on_update_poll_has_unread_votes(MessageFullId message_full
     on_unread_poll_vote_removed(d, m, "on_update_poll_has_unread_votes");
   } else {
     on_unread_poll_vote_added(d, m, "on_update_poll_has_unread_votes");
+    send_update_message_contains_unread_poll_votes(d->dialog_id, m, d->unread_poll_vote_count);
   }
 }
 
@@ -5258,6 +5259,7 @@ void MessagesManager::on_unread_poll_vote_removed(Dialog *d, const Message *m, c
     }
   } else {
     set_dialog_unread_poll_vote_count(d, d->unread_poll_vote_count - 1);
+    send_update_message_contains_unread_poll_votes(d->dialog_id, m, d->unread_poll_vote_count);
     on_dialog_updated(d->dialog_id, "on_unread_poll_vote_removed");
   }
 }
@@ -26548,6 +26550,25 @@ void MessagesManager::send_update_message_unread_reactions(DialogId dialog_id, c
                td_api::make_object<td_api::updateMessageUnreadReactions>(
                    get_chat_id_object(dialog_id, "updateMessageUnreadReactions"), m->message_id.get(),
                    get_unread_reactions_object(dialog_id, m), unread_reaction_count));
+}
+
+void MessagesManager::send_update_message_contains_unread_poll_votes(DialogId dialog_id, const Message *m,
+                                                                     int32 unread_poll_vote_count) const {
+  CHECK(m != nullptr);
+  if (td_->auth_manager_->is_bot()) {
+    return;
+  }
+  if (!m->is_update_sent) {
+    send_closure(G()->td(), &Td::send_update,
+                 td_api::make_object<td_api::updateChatUnreadPollVoteCount>(
+                     get_chat_id_object(dialog_id, "updateChatUnreadPollVoteCount"), unread_poll_vote_count));
+    return;
+  }
+
+  send_closure(G()->td(), &Td::send_update,
+               td_api::make_object<td_api::updateMessageContainsUnreadPollVotes>(
+                   get_chat_id_object(dialog_id, "updateMessageContainsUnreadPollVotes"), m->message_id.get(),
+                   has_unread_poll_votes(dialog_id, m), unread_poll_vote_count));
 }
 
 void MessagesManager::send_update_message_fact_check(DialogId dialog_id, const Message *m) const {
