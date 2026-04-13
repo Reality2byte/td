@@ -1036,6 +1036,7 @@ class MessagesManager final : public Actor {
     telegram_api::object_ptr<telegram_api::messageFwdHeader> forward_header;
     MessageReplyHeader reply_header;
     UserId via_bot_user_id;
+    DialogId guest_bot_via_dialog_id;
     UserId via_business_bot_user_id;
     int32 view_count = 0;
     int32 forward_count = 0;
@@ -1108,6 +1109,7 @@ class MessagesManager final : public Actor {
     mutable vector<FileUploadId> thumbnail_file_upload_ids;  // for send_message
 
     UserId via_bot_user_id;
+    DialogId guest_bot_via_dialog_id;
     UserId via_business_bot_user_id;
 
     vector<RestrictionReason> restriction_reasons;
@@ -2468,6 +2470,8 @@ class MessagesManager final : public Actor {
 
   td_api::object_ptr<td_api::MessageContent> get_message_message_content_object(DialogId dialog_id,
                                                                                 const Message *m) const;
+
+  td_api::object_ptr<td_api::MessageSender> get_message_guest_sender_object(const Message *m) const;
 
   td_api::object_ptr<td_api::message> get_message_object(Dialog *d, MessageId message_id, const char *source);
 

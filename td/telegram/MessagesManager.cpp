@@ -2329,6 +2329,7 @@ void MessagesManager::Message::store(StorerT &storer) const {
   bool has_schedule_repeat_period = schedule_repeat_period != 0;
   bool has_summary_from_language = !summary_from_language.empty();
   bool has_sender_rank = !sender_rank.empty();
+  bool has_guest_bot_via_dialog_id = guest_bot_via_dialog_id.is_valid();
   BEGIN_STORE_FLAGS();
   STORE_FLAG(is_channel_post);
   STORE_FLAG(is_outgoing);
@@ -2437,6 +2438,7 @@ void MessagesManager::Message::store(StorerT &storer) const {
     STORE_FLAG(has_summary_from_language);
     STORE_FLAG(is_quick_reply_message);
     STORE_FLAG(has_sender_rank);
+    STORE_FLAG(has_guest_bot_via_dialog_id);
     END_STORE_FLAGS();
   }
   // update MessageDb::get_message_info when flags5 is added
@@ -2591,6 +2593,9 @@ void MessagesManager::Message::store(StorerT &storer) const {
   if (has_sender_rank) {
     store(sender_rank, storer);
   }
+  if (has_guest_bot_via_dialog_id) {
+    store(guest_bot_via_dialog_id, storer);
+  }
 }
 
 // do not forget to resolve message dependencies
@@ -2659,6 +2664,7 @@ void MessagesManager::Message::parse(ParserT &parser) {
   bool has_schedule_repeat_period = false;
   bool has_summary_from_language = false;
   bool has_sender_rank = false;
+  bool has_guest_bot_via_dialog_id = false;
   BEGIN_PARSE_FLAGS();
   PARSE_FLAG(is_channel_post);
   PARSE_FLAG(is_outgoing);
@@ -2767,6 +2773,7 @@ void MessagesManager::Message::parse(ParserT &parser) {
     PARSE_FLAG(has_summary_from_language);
     PARSE_FLAG(is_quick_reply_message);
     PARSE_FLAG(has_sender_rank);
+    PARSE_FLAG(has_guest_bot_via_dialog_id);
     END_PARSE_FLAGS();
   }
 
@@ -2985,6 +2992,9 @@ void MessagesManager::Message::parse(ParserT &parser) {
   }
   if (has_sender_rank) {
     parse(sender_rank, parser);
+  }
+  if (has_guest_bot_via_dialog_id) {
+    parse(guest_bot_via_dialog_id, parser);
   }
 
   CHECK(content != nullptr);
@@ -9904,6 +9914,9 @@ vector<UserId> MessagesManager::get_message_user_ids(const Message *m) const {
   if (m->via_bot_user_id.is_valid()) {
     user_ids.push_back(m->via_bot_user_id);
   }
+  if (m->guest_bot_via_dialog_id.get_type() == DialogType::User) {
+    user_ids.push_back(m->guest_bot_via_dialog_id.get_user_id());
+  }
   if (m->via_business_bot_user_id.is_valid()) {
     user_ids.push_back(m->via_business_bot_user_id);
   }
@@ -9921,6 +9934,9 @@ vector<ChannelId> MessagesManager::get_message_channel_ids(const Message *m) con
   vector<ChannelId> channel_ids;
   if (m->sender_dialog_id.get_type() == DialogType::Channel) {
     channel_ids.push_back(m->sender_dialog_id.get_channel_id());
+  }
+  if (m->guest_bot_via_dialog_id.get_type() == DialogType::Channel) {
+    channel_ids.push_back(m->guest_bot_via_dialog_id.get_channel_id());
   }
   if (m->forward_info != nullptr) {
     m->forward_info->add_min_channel_ids(channel_ids);
@@ -11116,6 +11132,13 @@ MessagesManager::MessageInfo MessagesManager::parse_telegram_api_message(
         LOG(ERROR) << "Receive invalid " << message_info.via_bot_user_id << " from " << source;
         message_info.via_bot_user_id = UserId();
       }
+      if (message->guestchat_via_from_ != nullptr) {
+        message_info.guest_bot_via_dialog_id = DialogId(message->guestchat_via_from_);
+        if (!message_info.guest_bot_via_dialog_id.is_valid()) {
+          LOG(ERROR) << "Receive invalid " << message_info.guest_bot_via_dialog_id << " from " << source;
+          message_info.guest_bot_via_dialog_id = {};
+        }
+      }
       message_info.via_business_bot_user_id = UserId(message->via_business_bot_id_);
       if (message_info.via_business_bot_user_id != UserId() && !message_info.via_business_bot_user_id.is_valid()) {
         LOG(ERROR) << "Receive invalid " << message_info.via_business_bot_user_id << " from " << source;
@@ -11460,6 +11483,7 @@ std::pair<DialogId, unique_ptr<MessagesManager::Message>> MessagesManager::creat
   message->top_thread_message_id = top_thread_message_id;
   message->is_topic_message = is_topic_message;
   message->via_bot_user_id = via_bot_user_id;
+  message->guest_bot_via_dialog_id = message_info.guest_bot_via_dialog_id;
   message->via_business_bot_user_id = message_info.via_business_bot_user_id;
   message->reply_to_story_full_id = reply_to_story_full_id;
   message->restriction_reasons = std::move(message_info.restriction_reasons);
@@ -18296,7 +18320,8 @@ bool MessagesManager::try_add_active_live_location(DialogId dialog_id, const Mes
 
   if (td_->auth_manager_->is_bot() || m->content->get_type() != MessageContentType::LiveLocation ||
       m->message_id.is_scheduled() || m->message_id.is_local() || m->message_id.is_yet_unsent() ||
-      m->via_bot_user_id.is_valid() || m->via_business_bot_user_id.is_valid() || m->forward_info != nullptr) {
+      m->via_bot_user_id.is_valid() || m->guest_bot_via_dialog_id.is_valid() ||
+      m->via_business_bot_user_id.is_valid() || m->forward_info != nullptr) {
     return false;
   }
 
@@ -18395,8 +18420,9 @@ void MessagesManager::on_message_live_location_viewed(Dialog *d, const Message *
   }
 
   if (m->is_outgoing || !m->message_id.is_server() || m->via_bot_user_id.is_valid() ||
-      m->via_business_bot_user_id.is_valid() || !m->sender_user_id.is_valid() ||
-      td_->user_manager_->is_user_bot(m->sender_user_id) || m->forward_info != nullptr) {
+      m->guest_bot_via_dialog_id.is_valid() || m->via_business_bot_user_id.is_valid() ||
+      !m->sender_user_id.is_valid() || td_->user_manager_->is_user_bot(m->sender_user_id) ||
+      m->forward_info != nullptr) {
     return;
   }
 
@@ -20196,6 +20222,13 @@ tl_object_ptr<td_api::MessageSendingState> MessagesManager::get_message_sending_
   return nullptr;
 }
 
+td_api::object_ptr<td_api::MessageSender> MessagesManager::get_message_guest_sender_object(const Message *m) const {
+  if (m->guest_bot_via_dialog_id == DialogId()) {
+    return nullptr;
+  }
+  return get_message_sender_object_const(td_, m->guest_bot_via_dialog_id, "get_message_guest_sender_object");
+}
+
 td_api::object_ptr<td_api::MessageContent> MessagesManager::get_message_message_content_object(DialogId dialog_id,
                                                                                                const Message *m) const {
   auto live_location_date = m->is_failed_to_send ? 0 : m->date;
@@ -20251,9 +20284,10 @@ td_api::object_ptr<td_api::message> MessagesManager::get_dialog_event_log_messag
       nullptr, nullptr, m->is_outgoing, m->is_pinned, m->is_from_offline, can_be_saved, true, m->is_channel_post,
       m->is_paid_suggested_post_stars, m->is_paid_suggested_post_ton, false, false, m->date, edit_date,
       std::move(forward_info), std::move(import_info), std::move(interaction_info), Auto(), nullptr, nullptr,
-      std::move(reply_to), nullptr, nullptr, 0.0, 0.0, via_bot_user_id, 0, m->sender_boost_count, m->sender_rank,
-      m->paid_message_star_count, m->author_signature, 0, 0, get_restriction_info_object(m->restriction_reasons),
-      m->summary_from_language, std::move(content), std::move(reply_markup));
+      std::move(reply_to), nullptr, nullptr, 0.0, 0.0, via_bot_user_id, get_message_guest_sender_object(m), 0,
+      m->sender_boost_count, m->sender_rank, m->paid_message_star_count, m->author_signature, 0, 0,
+      get_restriction_info_object(m->restriction_reasons), m->summary_from_language, std::move(content),
+      std::move(reply_markup));
 }
 
 td_api::object_ptr<td_api::businessMessage> MessagesManager::get_business_message_object(
@@ -20319,10 +20353,10 @@ td_api::object_ptr<td_api::message> MessagesManager::get_business_message_messag
       m->message_id.get(), std::move(sender), get_chat_id_object(dialog_id, "get_business_message_message_object"),
       nullptr, nullptr, m->is_outgoing, false, m->is_from_offline, can_be_saved, false, false, false, false, false,
       false, m->date, m->edit_date, std::move(forward_info), std::move(import_info), nullptr, Auto(), nullptr, nullptr,
-      std::move(reply_to), nullptr, std::move(self_destruct_type), 0.0, 0.0, via_bot_user_id, via_business_bot_user_id,
-      m->sender_boost_count, m->sender_rank, m->paid_message_star_count, string(), m->media_album_id,
-      m->effect_id.get(), get_restriction_info_object(m->restriction_reasons), string(), std::move(content),
-      std::move(reply_markup));
+      std::move(reply_to), nullptr, std::move(self_destruct_type), 0.0, 0.0, via_bot_user_id,
+      get_message_guest_sender_object(m), via_business_bot_user_id, m->sender_boost_count, m->sender_rank,
+      m->paid_message_star_count, string(), m->media_album_id, m->effect_id.get(),
+      get_restriction_info_object(m->restriction_reasons), string(), std::move(content), std::move(reply_markup));
 }
 
 td_api::object_ptr<td_api::message> MessagesManager::get_message_object(Dialog *d, MessageId message_id,
@@ -20419,10 +20453,11 @@ td_api::object_ptr<td_api::message> MessagesManager::get_message_object(DialogId
       m->is_paid_suggested_post_ton, m->contains_unread_mention, contains_unread_poll_votes, date, edit_date,
       std::move(forward_info), std::move(import_info), std::move(interaction_info), std::move(unread_reactions),
       std::move(fact_check), std::move(suggested_post), std::move(reply_to), topic.get_message_topic_object(td_),
-      std::move(self_destruct_type), ttl_expires_in, auto_delete_in, via_bot_user_id, via_business_bot_user_id,
-      m->sender_boost_count, m->sender_rank, m->paid_message_star_count, m->author_signature, m->media_album_id,
-      m->effect_id.get(), get_restriction_info_object(m->restriction_reasons), m->summary_from_language,
-      std::move(content), std::move(reply_markup));
+      std::move(self_destruct_type), ttl_expires_in, auto_delete_in, via_bot_user_id,
+      get_message_guest_sender_object(m), via_business_bot_user_id, m->sender_boost_count, m->sender_rank,
+      m->paid_message_star_count, m->author_signature, m->media_album_id, m->effect_id.get(),
+      get_restriction_info_object(m->restriction_reasons), m->summary_from_language, std::move(content),
+      std::move(reply_markup));
 }
 
 td_api::object_ptr<td_api::messages> MessagesManager::get_messages_object(int32 total_count, DialogId dialog_id,
@@ -21083,6 +21118,7 @@ void MessagesManager::add_message_dependencies(Dependencies &dependencies, const
   dependencies.add_dialog_and_dependencies(m->reply_to_story_full_id.get_dialog_id());
   dependencies.add_dialog_and_dependencies(m->real_forward_from_dialog_id);
   dependencies.add(m->via_bot_user_id);
+  dependencies.add_message_sender_dependencies(m->guest_bot_via_dialog_id);
   dependencies.add(m->via_business_bot_user_id);
   if (m->forward_info != nullptr) {
     m->forward_info->add_dependencies(dependencies);
@@ -31941,6 +31977,12 @@ bool MessagesManager::update_message(Dialog *d, Message *old_message, unique_ptr
       old_message->hide_via_bot = false;
     }
   }
+  if (old_message->guest_bot_via_dialog_id != new_message->guest_bot_via_dialog_id) {
+    LOG(ERROR) << "Change guest sender from " << old_message->guest_bot_via_dialog_id << " to "
+               << new_message->guest_bot_via_dialog_id;
+    old_message->guest_bot_via_dialog_id = new_message->guest_bot_via_dialog_id;
+    need_send_update = true;
+  }
   if (old_message->via_business_bot_user_id != new_message->via_business_bot_user_id) {
     old_message->via_business_bot_user_id = new_message->via_business_bot_user_id;
     need_send_update = true;
@@ -35096,8 +35138,8 @@ void MessagesManager::update_sent_message_contents(DialogId dialog_id, const Mes
 void MessagesManager::update_used_hashtags(DialogId dialog_id, const Message *m) {
   CHECK(m != nullptr);
   if (td_->auth_manager_->is_bot() || (!m->is_outgoing && dialog_id != td_->dialog_manager_->get_my_dialog_id()) ||
-      m->via_bot_user_id.is_valid() || m->via_business_bot_user_id.is_valid() || m->hide_via_bot ||
-      is_message_forward(m)) {
+      m->via_bot_user_id.is_valid() || m->guest_bot_via_dialog_id.is_valid() ||
+      m->via_business_bot_user_id.is_valid() || m->hide_via_bot || is_message_forward(m)) {
     return;
   }
 
@@ -35109,7 +35151,7 @@ void MessagesManager::update_top_dialogs(DialogId dialog_id, const Message *m) {
   auto dialog_type = dialog_id.get_type();
   if (td_->auth_manager_->is_bot() || (!m->is_outgoing && dialog_id != td_->dialog_manager_->get_my_dialog_id()) ||
       dialog_type == DialogType::SecretChat || !m->message_id.is_any_server() ||
-      m->via_business_bot_user_id.is_valid()) {
+      m->guest_bot_via_dialog_id.is_valid() || m->via_business_bot_user_id.is_valid()) {
     return;
   }
 
