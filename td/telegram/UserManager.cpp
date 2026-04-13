@@ -1889,6 +1889,7 @@ void UserManager::User::store(StorerT &storer) const {
     STORE_FLAG(has_live_story);
     STORE_FLAG(can_bot_create_topics);
     STORE_FLAG(can_manage_bots);  // 20
+    STORE_FLAG(is_guestchat_bot);
     END_STORE_FLAGS();
   }
   store(first_name, storer);
@@ -2041,6 +2042,7 @@ void UserManager::User::parse(ParserT &parser) {
     PARSE_FLAG(has_live_story);
     PARSE_FLAG(can_bot_create_topics);
     PARSE_FLAG(can_manage_bots);
+    PARSE_FLAG(is_guestchat_bot);
     END_PARSE_FLAGS();
   }
   parse(first_name, parser);
@@ -3211,6 +3213,7 @@ void UserManager::on_get_user(telegram_api::object_ptr<telegram_api::User> &&use
   bool is_scam = user->scam_;
   bool can_be_edited_bot = user->bot_can_edit_;
   bool is_inline_bot = (flags & telegram_api::user::BOT_INLINE_PLACEHOLDER_MASK) != 0;
+  bool is_guestchat_bot = user->bot_guestchat_;
   bool is_business_bot = user->bot_business_;
   string inline_query_placeholder = std::move(user->bot_inline_placeholder_);
   int32 bot_active_users = user->bot_active_users_;
@@ -3225,7 +3228,7 @@ void UserManager::on_get_user(telegram_api::object_ptr<telegram_api::User> &&use
 
   if (!is_bot && (!can_join_groups || can_read_all_group_messages || can_be_added_to_attach_menu || can_be_edited_bot ||
                   has_main_app || has_bot_forum_view || can_bot_create_topics || can_manage_bots || is_inline_bot ||
-                  is_business_bot)) {
+                  is_business_bot || is_guestchat_bot)) {
     LOG(ERROR) << "Receive not bot " << user_id << " with bot properties from " << source;
     can_join_groups = true;
     can_read_all_group_messages = false;
@@ -3237,6 +3240,7 @@ void UserManager::on_get_user(telegram_api::object_ptr<telegram_api::User> &&use
     can_manage_bots = false;
     is_inline_bot = false;
     is_business_bot = false;
+    is_guestchat_bot = false;
   }
   if (need_location_bot && !is_inline_bot) {
     LOG(ERROR) << "Receive not inline bot " << user_id << " which needs user location from " << source;
@@ -3258,6 +3262,7 @@ void UserManager::on_get_user(telegram_api::object_ptr<telegram_api::User> &&use
     can_bot_create_topics = false;
     can_manage_bots = false;
     is_inline_bot = false;
+    is_guestchat_bot = false;
     is_business_bot = false;
     inline_query_placeholder = string();
     bot_active_users = 0;
@@ -3273,7 +3278,7 @@ void UserManager::on_get_user(telegram_api::object_ptr<telegram_api::User> &&use
       is_business_bot != u->is_business_bot || inline_query_placeholder != u->inline_query_placeholder ||
       need_location_bot != u->need_location_bot || can_be_added_to_attach_menu != u->can_be_added_to_attach_menu ||
       has_main_app != u->has_main_app || can_bot_create_topics != u->can_bot_create_topics ||
-      can_manage_bots != u->can_manage_bots) {
+      can_manage_bots != u->can_manage_bots || is_guestchat_bot != u->is_guestchat_bot) {
     if (is_bot != u->is_bot) {
       LOG_IF(ERROR, !is_deleted && !u->is_deleted && u->is_received)
           << "User.is_bot has changed for " << user_id << "/" << u->usernames << " from " << source << " from "
@@ -3295,6 +3300,7 @@ void UserManager::on_get_user(telegram_api::object_ptr<telegram_api::User> &&use
     u->has_main_app = has_main_app;
     u->can_bot_create_topics = can_bot_create_topics;
     u->can_manage_bots = can_manage_bots;
+    u->is_guestchat_bot = is_guestchat_bot;
 
     LOG(DEBUG) << "Info has changed for " << user_id;
     u->is_changed = true;
@@ -5344,6 +5350,7 @@ Result<UserManager::BotData> UserManager::get_bot_data(UserId user_id) const {
   bot_data.can_bot_create_topics = u->can_bot_create_topics;
   bot_data.can_manage_bots = u->can_manage_bots;
   bot_data.is_inline = u->is_inline_bot;
+  bot_data.is_guestchat_bot = u->is_guestchat_bot;
   bot_data.is_business = u->is_business_bot;
   bot_data.need_location = u->need_location_bot;
   bot_data.can_be_added_to_attach_menu = u->can_be_added_to_attach_menu;
@@ -10215,8 +10222,8 @@ td_api::object_ptr<td_api::user> UserManager::get_user_object(UserId user_id, co
     type = td_api::make_object<td_api::userTypeBot>(
         u->can_be_edited_bot, u->can_join_groups, u->can_read_all_group_messages, u->has_main_app,
         u->has_bot_forum_view, u->has_bot_forum_view && !u->can_bot_create_topics, u->can_manage_bots, u->is_inline_bot,
-        u->inline_query_placeholder, u->need_location_bot, u->is_business_bot, u->can_be_added_to_attach_menu,
-        u->bot_active_users);
+        u->inline_query_placeholder, u->is_guestchat_bot, u->need_location_bot, u->is_business_bot,
+        u->can_be_added_to_attach_menu, u->bot_active_users);
   } else {
     type = td_api::make_object<td_api::userTypeRegular>();
   }
