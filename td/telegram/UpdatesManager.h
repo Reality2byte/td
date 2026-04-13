@@ -683,13 +683,22 @@ class UpdatesManager final : public Actor {
   void on_update(tl_object_ptr<telegram_api::updateManagedBot> update, Promise<Unit> &&promise);
 
   void on_update(tl_object_ptr<telegram_api::updateBotStopped> update, Promise<Unit> &&promise);
+
   void on_update(tl_object_ptr<telegram_api::updateChatParticipant> update, Promise<Unit> &&promise);
+
   void on_update(tl_object_ptr<telegram_api::updateChannelParticipant> update, Promise<Unit> &&promise);
+
   void on_update(tl_object_ptr<telegram_api::updateBotChatInviteRequester> update, Promise<Unit> &&promise);
+
   void on_update(tl_object_ptr<telegram_api::updateBotChatBoost> update, Promise<Unit> &&promise);
+
   void on_update(tl_object_ptr<telegram_api::updateBotMessageReaction> update, Promise<Unit> &&promise);
+
   void on_update(tl_object_ptr<telegram_api::updateBotMessageReactions> update, Promise<Unit> &&promise);
+
   void on_update(tl_object_ptr<telegram_api::updateBotPurchasedPaidMedia> update, Promise<Unit> &&promise);
+
+  void on_update(tl_object_ptr<telegram_api::updateBotGuestChatQuery> update, Promise<Unit> &&promise);
 
   void on_update(tl_object_ptr<telegram_api::updateTheme> update, Promise<Unit> &&promise);
 
@@ -742,8 +751,6 @@ class UpdatesManager final : public Actor {
   // unsupported updates
 
   void on_update(tl_object_ptr<telegram_api::updateNewStoryReaction> update, Promise<Unit> &&promise);
-
-  void on_update(tl_object_ptr<telegram_api::updateBotGuestChatQuery> update, Promise<Unit> &&promise);
 
   void on_update(tl_object_ptr<telegram_api::updateAiComposeTones> update, Promise<Unit> &&promise);
 };

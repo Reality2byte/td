@@ -10432,6 +10432,12 @@ updateNewInlineQuery id:int64 sender_user_id:int53 user_location:location chat_t
 //@inline_message_id Identifier of the sent inline message, if known
 updateNewChosenInlineResult sender_user_id:int53 user_location:location query:string result_id:string inline_message_id:string = Update;
 
+//@description A new incoming guest query; for bots only
+//@id Unique query identifier
+//@message The message with the query
+//@reference_messages The list of reference messages
+updateNewGuestQuery id:int64 message:message reference_messages:vector<message> = Update;
+
 //@description A new incoming callback query; for bots only
 //@id Unique query identifier
 //@sender_user_id Identifier of the user who sent the query
