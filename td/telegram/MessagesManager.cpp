@@ -20279,6 +20279,7 @@ td_api::object_ptr<td_api::message> MessagesManager::get_dialog_event_log_messag
   auto content = get_message_content_object(
       m->content.get(), td_, dialog_id, m->message_id, m->is_outgoing, true, get_message_sender(m), 0, false, true,
       get_message_own_max_media_timestamp(m), m->invert_media, m->disable_web_page_preview);
+
   return td_api::make_object<td_api::message>(
       m->message_id.get(), std::move(sender), get_chat_id_object(dialog_id, "get_dialog_event_log_message_object"),
       nullptr, nullptr, m->is_outgoing, m->is_pinned, m->is_from_offline, can_be_saved, true, m->is_channel_post,
@@ -20338,6 +20339,10 @@ td_api::object_ptr<td_api::message> MessagesManager::get_guest_message_object(
       m->via_business_bot_user_id, "get_guest_message_object via_business_bot_user_id");
   auto reply_to = [&]() -> td_api::object_ptr<td_api::MessageReplyTo> {
     if (!m->replied_message_info.is_empty()) {
+      if (!m->replied_message_info.is_external() &&
+          m->replied_message_info.get_same_chat_reply_to_message_id(false) == MessageId()) {
+        return nullptr;
+      }
       return m->replied_message_info.get_message_reply_to_message_object(td_, dialog_id, m->message_id);
     }
     if (m->reply_to_story_full_id.is_valid()) {
@@ -20427,6 +20432,10 @@ td_api::object_ptr<td_api::message> MessagesManager::get_message_object(DialogId
                                                                          "get_message_object via_business_bot_user_id");
   auto reply_to = [&]() -> td_api::object_ptr<td_api::MessageReplyTo> {
     if (!m->replied_message_info.is_empty()) {
+      if (is_bot && !m->replied_message_info.is_external() &&
+          m->replied_message_info.get_same_chat_reply_to_message_id(false) == MessageId()) {
+        return nullptr;
+      }
       if (!is_bot && m->is_topic_message &&
           m->replied_message_info.get_same_chat_reply_to_message_id(false) == m->top_thread_message_id) {
         return nullptr;
