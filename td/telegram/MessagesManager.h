@@ -823,6 +823,9 @@ class MessagesManager final : public Actor {
       telegram_api::object_ptr<telegram_api::Message> &&message,
       telegram_api::object_ptr<telegram_api::Message> &&reply_to_message);
 
+  td_api::object_ptr<td_api::message> get_guest_message_object(
+      telegram_api::object_ptr<telegram_api::Message> &&message, bool is_business_message);
+
   td_api::object_ptr<td_api::message> get_message_object(MessageFullId message_full_id, const char *source);
 
   td_api::object_ptr<td_api::messages> get_messages_object(int32 total_count, DialogId dialog_id,
@@ -1687,7 +1690,7 @@ class MessagesManager final : public Actor {
                                                 bool is_scheduled, bool is_business_message, const char *source);
 
   static std::pair<DialogId, unique_ptr<Message>> create_message(Td *td, MessageInfo &&message_info,
-                                                                 bool is_channel_message, bool is_business_message,
+                                                                 bool is_channel_message, bool is_guest_message,
                                                                  const char *source);
 
   MessageId find_old_message_id(DialogId dialog_id, MessageId message_id) const;
@@ -2484,9 +2487,6 @@ class MessagesManager final : public Actor {
   static td_api::object_ptr<td_api::messages> get_messages_object(int32 total_count,
                                                                   vector<tl_object_ptr<td_api::message>> &&messages,
                                                                   bool skip_not_found);
-
-  td_api::object_ptr<td_api::message> get_business_message_message_object(
-      telegram_api::object_ptr<telegram_api::Message> &&message);
 
   td_api::object_ptr<td_api::updateActiveLiveLocationMessages> get_update_active_live_location_messages_object() const;
 
