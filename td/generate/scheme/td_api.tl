@@ -7127,6 +7127,9 @@ inlineQueryResultsButton text:string type:InlineQueryResultsButtonType = InlineQ
 inlineQueryResults inline_query_id:int64 button:inlineQueryResultsButton results:vector<InlineQueryResult> next_offset:string = InlineQueryResults;
 
 
+//@description Contains identifier of a sent guest message @id Unique identifier for the message
+inlineMessageId id:string = InlineMessageId;
+
 //@description Represents an inline message that can be sent via the bot
 //@id Unique identifier for the message
 //@expiration_date Point in time (Unix timestamp) when the message can't be used anymore
@@ -12154,6 +12157,11 @@ getInlineQueryResults bot_user_id:int53 chat_id:int53 user_location:location que
 //@cache_time Allowed time to cache the results of the query, in seconds
 //@next_offset Offset for the next inline query; pass an empty string if there are no more results
 answerInlineQuery inline_query_id:int64 is_personal:Bool button:inlineQueryResultsButton results:vector<InputInlineQueryResult> cache_time:int32 next_offset:string = Ok;
+
+//@description Sets the result of a guest query; for bots only
+//@guest_query_id Identifier of the guest query
+//@result The result of the query
+answerGuestQuery guest_query_id:int64 result:InputInlineQueryResult = InlineMessageId;
 
 //@description Saves an inline message to be sent by the given user; for bots only
 //@user_id Identifier of the user
