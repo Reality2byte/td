@@ -128,9 +128,14 @@ fixedText text:formattedText diff_text:diffText = FixedText;
 
 //@description Describes a style that can be used to compose a text
 //@name Name of the style
-//@custom_emoji_id Identifier of the custom emoji corresponding to the style
+//@custom_emoji_id Identifier of the custom emoji corresponding to the style; 0 if none
 //@title Title of the style in the user application's language
-textCompositionStyle name:string custom_emoji_id:int64 title:string = TextCompositionStyle;
+//@is_custom True, if the style is created by a user
+//@is_creator True, if the user is creator of the style
+//@install_count Number of users that installed the style; for created custom styles only; 0 if unknown
+//@prompt Prompt of the style; for created custom styles only
+//@creator_user_id User identifier of the creator of the style; 0 if none of unknown
+textCompositionStyle name:string custom_emoji_id:int64 title:string is_custom:Bool is_creator:Bool install_count:int32 prompt:string creator_user_id:int53 = TextCompositionStyle;
 
 
 //@description Contains Telegram terms of service @text Text of the terms of service @min_user_age The minimum age of a user to be able to accept the terms; 0 if age isn't restricted @show_popup True, if a blocking popup with terms of service must be shown to the user

@@ -308,7 +308,8 @@ td_api::object_ptr<td_api::updateTextCompositionStyles> TranslationManager::get_
   auto result = td_api::make_object<td_api::updateTextCompositionStyles>();
   for (size_t i = 0; i < ai_compose_styles_.size(); i += 3) {
     result->styles_.push_back(td_api::make_object<td_api::textCompositionStyle>(
-        ai_compose_styles_[i], to_integer<int64>(ai_compose_styles_[i + 1]), ai_compose_styles_[i + 2]));
+        ai_compose_styles_[i], to_integer<int64>(ai_compose_styles_[i + 1]), ai_compose_styles_[i + 2], false, false, 0,
+        string(), 0));
   }
   return result;
 }

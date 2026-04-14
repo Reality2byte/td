@@ -344,6 +344,7 @@ set(TDLIB_SOURCE_PART1
   td/telegram/ActiveStoryState.cpp
   td/telegram/AffiliateType.cpp
   td/telegram/AgeVerificationParameters.cpp
+  td/telegram/AiComposeTone.cpp
   td/telegram/AlarmManager.cpp
   td/telegram/AnimationsManager.cpp
   td/telegram/Application.cpp
@@ -701,6 +702,7 @@ set(TDLIB_SOURCE_PART2
   td/telegram/AffectedHistory.h
   td/telegram/AffiliateType.h
   td/telegram/AgeVerificationParameters.h
+  td/telegram/AiComposeTone.h
   td/telegram/AlarmManager.h
   td/telegram/AnimationsManager.h
   td/telegram/Application.h
@@ -1125,6 +1127,7 @@ set(TDLIB_SOURCE_PART2
   td/telegram/WebPagesManager.h
 
   td/telegram/AgeVerificationParameters.hpp
+  td/telegram/AiComposeTone.hpp
   td/telegram/AnimationsManager.hpp
   td/telegram/AudiosManager.hpp
   td/telegram/AuthManager.hpp
