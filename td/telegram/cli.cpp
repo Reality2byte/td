@@ -4985,6 +4985,13 @@ class CliClient final : public Actor {
       send_request(td_api::make_object<td_api::getMessageEmbeddingCode>(chat_id, message_id, for_album));
     } else if (op == "gmli") {
       send_request(td_api::make_object<td_api::getMessageLinkInfo>(args));
+    } else if (op == "ctcs" || op == "ctcsp") {
+      string title;
+      int64 custom_emoji_id;
+      string prompt;
+      get_args(args, title, custom_emoji_id, prompt);
+      send_request(
+          td_api::make_object<td_api::createTextCompositionStyle>(title, custom_emoji_id, prompt, op == "ctcsp"));
     } else if (op == "tt" || op == "ttf" || op == "ttc" || op == "ttn") {
       string text;
       string to_language_code;

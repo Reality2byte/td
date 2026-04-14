@@ -11382,6 +11382,14 @@ getMessageEmbeddingCode chat_id:int53 message_id:int53 for_album:Bool = Text;
 getMessageLinkInfo url:string = MessageLinkInfo;
 
 
+//@description Creates a custom text composition style
+//@title Title of the style
+//@custom_emoji_id Identifier of the custom emoji corresponding to the style
+//@prompt Prompt that will be used for text composition
+//@show_creator True, if the current user should be shown as the creator of the style
+createTextCompositionStyle title:string custom_emoji_id:int64 prompt:string show_creator:Bool = TextCompositionStyle;
+
+
 //@description Translates a text to the given language; must not be used in secret chats. If the current user is a Telegram Premium user, then text formatting is preserved
 //@text Text to translate
 //@to_language_code Language code of the language to which the message is translated. Must be one of

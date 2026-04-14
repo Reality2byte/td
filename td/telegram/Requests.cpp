@@ -2788,6 +2788,15 @@ void Requests::on_request(uint64 id, td_api::getMessageLinkInfo &request) {
   CREATE_REQUEST(GetMessageLinkInfoRequest, std::move(request.url_));
 }
 
+void Requests::on_request(uint64 id, td_api::createTextCompositionStyle &request) {
+  CHECK_IS_USER();
+  CLEAN_INPUT_STRING(request.title_);
+  CLEAN_INPUT_STRING(request.prompt_);
+  CREATE_REQUEST_PROMISE();
+  td_->translation_manager_->create_tone(request.title_, CustomEmojiId(request.custom_emoji_id_), request.prompt_,
+                                         request.show_creator_, std::move(promise));
+}
+
 void Requests::on_request(uint64 id, td_api::translateText &request) {
   CHECK_IS_USER();
   CLEAN_INPUT_STRING(request.to_language_code_);

@@ -51,6 +51,9 @@ class TranslationManager final : public Actor {
 
   void on_get_ai_compose_tones(telegram_api::object_ptr<telegram_api::aicompose_Tones> &&tones_ptr);
 
+  void create_tone(const string &title, CustomEmojiId custom_emoji_id, const string &prompt, bool show_creator,
+                   Promise<td_api::object_ptr<td_api::textCompositionStyle>> &&promise);
+
   void get_current_state(vector<td_api::object_ptr<td_api::Update>> &updates) const;
 
  private:
@@ -63,6 +66,9 @@ class TranslationManager final : public Actor {
   void on_get_translated_texts(vector<telegram_api::object_ptr<telegram_api::textWithEntities>> texts,
                                bool skip_bot_commands, int32 max_media_timestamp,
                                Promise<td_api::object_ptr<td_api::formattedText>> &&promise);
+
+  void do_create_tone(const string &title, CustomEmojiId custom_emoji_id, const string &prompt, bool show_creator,
+                      Promise<td_api::object_ptr<td_api::textCompositionStyle>> &&promise);
 
   static string get_ai_compose_tones_key();
 

@@ -318,6 +318,8 @@ class Requests {
 
   void on_request(uint64 id, td_api::getMessageLinkInfo &request);
 
+  void on_request(uint64 id, td_api::createTextCompositionStyle &request);
+
   void on_request(uint64 id, td_api::translateText &request);
 
   void on_request(uint64 id, td_api::translateMessageText &request);
