@@ -90,6 +90,7 @@
 #include "td/telegram/TimeZoneManager.h"
 #include "td/telegram/TonAmount.h"
 #include "td/telegram/TranscriptionManager.h"
+#include "td/telegram/TranslationManager.h"
 #include "td/telegram/UserManager.h"
 #include "td/telegram/Usernames.h"
 #include "td/telegram/WebAppManager.h"
@@ -2432,6 +2433,7 @@ void UpdatesManager::try_reload_data() {
   td_->theme_manager_->reload_chat_themes();
   td_->theme_manager_->reload_profile_accent_colors();
   td_->time_zone_manager_->reload_time_zones(Auto());
+  td_->translation_manager_->reload_ai_compose_tones();
   td_->user_manager_->reload_contact_birthdates(false);
   td_->user_manager_->reload_my_saved_music_list(Auto());
 

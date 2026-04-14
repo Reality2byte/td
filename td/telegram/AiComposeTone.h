@@ -69,6 +69,10 @@ class AiComposeTones {
 
   td_api::object_ptr<td_api::updateTextCompositionStyles> get_update_text_composition_styles_object(Td *td) const;
 
+  int64 get_hash() const {
+    return hash_;
+  }
+
   template <class StorerT>
   void store(StorerT &storer) const;
 

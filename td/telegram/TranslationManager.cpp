@@ -80,6 +80,28 @@ class TranslateTextQuery final : public Td::ResultHandler {
   }
 };
 
+class GetAiComposeTonesQuery final : public Td::ResultHandler {
+ public:
+  void send(int64 hash) {
+    send_query(G()->net_query_creator().create(telegram_api::aicompose_getTones(hash)));
+  }
+
+  void on_result(BufferSlice packet) final {
+    auto result_ptr = fetch_result<telegram_api::aicompose_getTones>(packet);
+    if (result_ptr.is_error()) {
+      return on_error(result_ptr.move_as_error());
+    }
+
+    auto ptr = result_ptr.move_as_ok();
+    LOG(INFO) << "Receive result for GetAiComposeTonesQuery: " << to_string(ptr);
+    td_->translation_manager_->on_get_ai_compose_tones(std::move(ptr));
+  }
+
+  void on_error(Status status) final {
+    LOG(INFO) << "Receive error for GetAiComposeTonesQuery: " << status;
+  }
+};
+
 class ComposeMessageWithAiQuery final : public Td::ResultHandler {
   Promise<td_api::object_ptr<td_api::formattedText>> promise_;
   bool skip_bot_commands_;
@@ -181,6 +203,9 @@ void TranslationManager::start_up() {
       ai_compose_tones_ = {};
     }
     send_update_text_composition_styles();
+    if (ai_compose_tones_ == AiComposeTones()) {
+      reload_ai_compose_tones();
+    }
   }
 }
 
@@ -191,6 +216,7 @@ void TranslationManager::tear_down() {
 void TranslationManager::on_authorization_success() {
   if (!td_->auth_manager_->is_bot()) {
     send_update_text_composition_styles();
+    reload_ai_compose_tones();
   }
 }
 
@@ -294,7 +320,34 @@ string TranslationManager::get_ai_compose_tones_key() {
 }
 
 void TranslationManager::reload_ai_compose_tones() {
-  // TODO
+  if (td_->auth_manager_->is_authorized() && !td_->auth_manager_->is_bot()) {
+    td_->create_handler<GetAiComposeTonesQuery>()->send(ai_compose_tones_.get_hash());
+  }
+}
+
+void TranslationManager::on_get_ai_compose_tones(telegram_api::object_ptr<telegram_api::aicompose_Tones> &&tones_ptr) {
+  CHECK(tones_ptr != nullptr);
+  if (!td_->auth_manager_->is_authorized()) {
+    return;
+  }
+  switch (tones_ptr->get_id()) {
+    case telegram_api::aicompose_tonesNotModified::ID:
+      break;
+    case telegram_api::aicompose_tones::ID: {
+      auto ai_compose_tones =
+          AiComposeTones(td_, telegram_api::move_object_as<telegram_api::aicompose_tones>(tones_ptr));
+      if (ai_compose_tones == ai_compose_tones_) {
+        break;
+      }
+      ai_compose_tones_ = std::move(ai_compose_tones);
+      G()->td_db()->get_binlog_pmc()->set(get_ai_compose_tones_key(),
+                                          log_event_store(ai_compose_tones_).as_slice().str());
+      send_update_text_composition_styles();
+      break;
+    }
+    default:
+      UNREACHABLE();
+  }
 }
 
 void TranslationManager::send_update_text_composition_styles() const {

@@ -49,6 +49,8 @@ class TranslationManager final : public Actor {
 
   void reload_ai_compose_tones();
 
+  void on_get_ai_compose_tones(telegram_api::object_ptr<telegram_api::aicompose_Tones> &&tones_ptr);
+
   void get_current_state(vector<td_api::object_ptr<td_api::Update>> &updates) const;
 
  private:
