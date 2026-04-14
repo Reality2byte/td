@@ -112,8 +112,8 @@ class ComposeMessageWithAiQuery final : public Td::ResultHandler {
       : promise_(std::move(promise)) {
   }
 
-  void send(const TranslationManager::InputText &text, const string &translate_to_language_code, string tone,
-            bool emojify) {
+  void send(const TranslationManager::InputText &text, const string &translate_to_language_code,
+            telegram_api::object_ptr<telegram_api::InputAiComposeTone> &&input_tone, bool emojify) {
     skip_bot_commands_ = text.skip_bot_commands_;
     max_media_timestamp_ = text.max_media_timestamp_;
 
@@ -121,10 +121,8 @@ class ComposeMessageWithAiQuery final : public Td::ResultHandler {
     if (!translate_to_language_code.empty()) {
       flags |= telegram_api::messages_composeMessageWithAI::TRANSLATE_TO_LANG_MASK;
     }
-    telegram_api::object_ptr<telegram_api::InputAiComposeTone> input_tone;
-    if (!tone.empty()) {
+    if (input_tone != nullptr) {
       flags |= telegram_api::messages_composeMessageWithAI::TONE_MASK;
-      input_tone = telegram_api::make_object<telegram_api::inputAiComposeToneDefault>(tone);
     }
     send_query(G()->net_query_creator().create(telegram_api::messages_composeMessageWithAI(
         flags, false, emojify,
@@ -305,8 +303,9 @@ void TranslationManager::compose_message_with_ai(td_api::object_ptr<td_api::form
                                                  bool emojify,
                                                  Promise<td_api::object_ptr<td_api::formattedText>> &&promise) {
   TRY_RESULT_PROMISE(promise, input_text, get_input_text(std::move(text)));
+  TRY_RESULT_PROMISE(promise, input_tone, ai_compose_tones_.get_input_ai_compose_tone(tone));
   td_->create_handler<ComposeMessageWithAiQuery>(std::move(promise))
-      ->send(input_text, translate_to_language_code, tone, emojify);
+      ->send(input_text, translate_to_language_code, std::move(input_tone), emojify);
 }
 
 void TranslationManager::proofread_message_with_ai(td_api::object_ptr<td_api::formattedText> &&text,

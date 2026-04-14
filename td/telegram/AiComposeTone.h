@@ -12,6 +12,7 @@
 #include "td/telegram/UserId.h"
 
 #include "td/utils/common.h"
+#include "td/utils/Status.h"
 
 namespace td {
 
@@ -40,6 +41,12 @@ class AiComposeTone {
   explicit AiComposeTone(telegram_api::object_ptr<telegram_api::AiComposeTone> &&tone_ptr);
 
   td_api::object_ptr<td_api::textCompositionStyle> get_text_composition_style_object(Td *td) const;
+
+  bool has_name(const string &name) const {
+    return name == slug_;
+  }
+
+  telegram_api::object_ptr<telegram_api::InputAiComposeTone> get_input_ai_compose_tone() const;
 
   void add_dependencies(Dependencies &dependencies) const;
 
@@ -72,6 +79,9 @@ class AiComposeTones {
   int64 get_hash() const {
     return hash_;
   }
+
+  Result<telegram_api::object_ptr<telegram_api::InputAiComposeTone>> get_input_ai_compose_tone(
+      const string &name) const;
 
   template <class StorerT>
   void store(StorerT &storer) const;

@@ -59,6 +59,18 @@ td_api::object_ptr<td_api::textCompositionStyle> AiComposeTone::get_text_composi
       td->user_manager_->get_user_id_object(author_user_id_, "textCompositionStyle"));
 }
 
+telegram_api::object_ptr<telegram_api::InputAiComposeTone> AiComposeTone::get_input_ai_compose_tone() const {
+  switch (type_) {
+    case Type::Default:
+      return telegram_api::make_object<telegram_api::inputAiComposeToneDefault>(slug_);
+    case Type::Custom:
+      return telegram_api::make_object<telegram_api::inputAiComposeToneID>(id_, access_hash_);
+    default:
+      UNREACHABLE();
+      return nullptr;
+  }
+}
+
 void AiComposeTone::add_dependencies(Dependencies &dependencies) const {
   dependencies.add(author_user_id_);
 }
@@ -83,6 +95,19 @@ td_api::object_ptr<td_api::updateTextCompositionStyles> AiComposeTones::get_upda
     Td *td) const {
   return td_api::make_object<td_api::updateTextCompositionStyles>(
       transform(tones_, [td](const AiComposeTone &tone) { return tone.get_text_composition_style_object(td); }));
+}
+
+Result<telegram_api::object_ptr<telegram_api::InputAiComposeTone>> AiComposeTones::get_input_ai_compose_tone(
+    const string &name) const {
+  if (name.empty()) {
+    return nullptr;
+  }
+  for (const auto &tone : tones_) {
+    if (tone.has_name(name)) {
+      return tone.get_input_ai_compose_tone();
+    }
+  }
+  return Status::Error(400, "Style not found");
 }
 
 bool operator==(const AiComposeTones &lhs, const AiComposeTones &rhs) {
