@@ -2069,6 +2069,10 @@ void ConfigManager::process_app_config(tl_object_ptr<telegram_api::JSONValue> &c
         }
         continue;
       }
+      if (key == "phone_country_iso2") {
+        G()->set_option_string("phone_country_iso2", get_json_value_string(std::move(key_value->value_), key));
+        continue;
+      }
 
       new_values.push_back(std::move(key_value));
     }

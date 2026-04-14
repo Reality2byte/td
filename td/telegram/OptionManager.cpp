@@ -486,6 +486,7 @@ bool OptionManager::is_internal_option(Slice name) {
                                                               "online_cloud_timeout_ms",
                                                               "online_update_period_ms",
                                                               "otherwise_relogin_days",
+                                                              "phone_country_iso2",
                                                               "pm_read_date_expire_period",
                                                               "poll_answer_delete_period",
                                                               "premium_bot_username",
