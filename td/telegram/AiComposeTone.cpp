@@ -110,6 +110,12 @@ Result<telegram_api::object_ptr<telegram_api::InputAiComposeTone>> AiComposeTone
   return Status::Error(400, "Style not found");
 }
 
+void AiComposeTones::add_dependencies(Dependencies &dependencies) const {
+  for (const auto &tone : tones_) {
+    tone.add_dependencies(dependencies);
+  }
+}
+
 bool operator==(const AiComposeTones &lhs, const AiComposeTones &rhs) {
   return lhs.hash_ == rhs.hash_ && lhs.tones_ == rhs.tones_;
 }

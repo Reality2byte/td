@@ -83,6 +83,8 @@ class AiComposeTones {
   Result<telegram_api::object_ptr<telegram_api::InputAiComposeTone>> get_input_ai_compose_tone(
       const string &name) const;
 
+  void add_dependencies(Dependencies &dependencies) const;
+
   template <class StorerT>
   void store(StorerT &storer) const;
 

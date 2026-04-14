@@ -9,6 +9,7 @@
 #include "td/telegram/AccessRights.h"
 #include "td/telegram/AiComposeTone.hpp"
 #include "td/telegram/AuthManager.h"
+#include "td/telegram/Dependencies.h"
 #include "td/telegram/DialogManager.h"
 #include "td/telegram/DiffText.h"
 #include "td/telegram/Global.h"
@@ -196,9 +197,16 @@ TranslationManager::TranslationManager(Td *td, ActorShared<> parent) : td_(td), 
 void TranslationManager::start_up() {
   if (td_->auth_manager_->is_authorized() && !td_->auth_manager_->is_bot()) {
     auto ai_compose_tones_log_event_string = G()->td_db()->get_binlog_pmc()->get(get_ai_compose_tones_key());
-    if (!ai_compose_tones_log_event_string.empty() &&
-        log_event_parse(ai_compose_tones_, ai_compose_tones_log_event_string).is_error()) {
-      ai_compose_tones_ = {};
+    if (!ai_compose_tones_log_event_string.empty()) {
+      if (log_event_parse(ai_compose_tones_, ai_compose_tones_log_event_string).is_error()) {
+        ai_compose_tones_ = {};
+      } else {
+        Dependencies dependencies;
+        ai_compose_tones_.add_dependencies(dependencies);
+        if (!dependencies.resolve_force(td_, "AiComposeTones")) {
+          ai_compose_tones_ = {};
+        }
+      }
     }
     send_update_text_composition_styles();
     if (ai_compose_tones_ == AiComposeTones()) {
