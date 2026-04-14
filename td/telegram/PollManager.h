@@ -122,7 +122,7 @@ class PollManager final : public Actor {
 
   void on_get_poll_vote(PollId poll_id, DialogId dialog_id, vector<BufferSlice> &&options, vector<int32> positions);
 
-  td_api::object_ptr<td_api::poll> get_poll_object(PollId poll_id) const;
+  td_api::object_ptr<td_api::poll> get_poll_object(PollId poll_id, DialogId dialog_id, MessageId message_id) const;
 
   void on_binlog_events(vector<BinlogEvent> &&events);
 
@@ -232,10 +232,11 @@ class PollManager final : public Actor {
   bool can_delete_poll_option(const Poll *poll, const PollOption *option, MessageId message_id, bool is_forward,
                               bool is_outgoing);
 
-  td_api::object_ptr<td_api::PollVoteRestrictionReason> get_poll_vote_restriction_reason_object(PollId poll_id,
-                                                                                                const Poll *poll) const;
+  td_api::object_ptr<td_api::PollVoteRestrictionReason> get_poll_vote_restriction_reason_object(
+      PollId poll_id, const Poll *poll, DialogId dialog_id, MessageId message_id) const;
 
-  td_api::object_ptr<td_api::poll> get_poll_object(PollId poll_id, const Poll *poll) const;
+  td_api::object_ptr<td_api::poll> get_poll_object(PollId poll_id, const Poll *poll, DialogId dialog_id,
+                                                   MessageId message_id) const;
 
   void on_get_poll_results(PollId poll_id, uint64 generation, Result<tl_object_ptr<telegram_api::Updates>> result);
 

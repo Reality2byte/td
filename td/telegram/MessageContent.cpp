@@ -10826,7 +10826,7 @@ td_api::object_ptr<td_api::MessageContent> get_message_content_object(
       auto can_add_option = !td->auth_manager_->is_bot() && !is_forward && message_id.is_server() &&
                             td->dialog_manager_->have_input_peer(dialog_id, false, AccessRights::Read) &&
                             td->poll_manager_->get_poll_can_add_option(m->poll_id);
-      return make_tl_object<td_api::messagePoll>(td->poll_manager_->get_poll_object(m->poll_id),
+      return make_tl_object<td_api::messagePoll>(td->poll_manager_->get_poll_object(m->poll_id, dialog_id, message_id),
                                                  get_text_object(m->caption), std::move(media), can_add_option);
     }
     case MessageContentType::Dice: {

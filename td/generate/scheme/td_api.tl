@@ -447,15 +447,21 @@ inputPollTypeQuiz correct_option_ids:vector<int32> explanation:formattedText = I
 
 //@class PollVoteRestrictionReason @description Reason of vote restriction in the poll for the current user
 
-//@description The poll isn't sent yet
-pollVoteRestrictionReasonPending = PollVoteRestrictionReason;
-
 //@description The poll is closed
 pollVoteRestrictionReasonClosed = PollVoteRestrictionReason;
 
+//@description The poll isn't sent yet
+pollVoteRestrictionReasonYetUnsent = PollVoteRestrictionReason;
+
+//@description The poll is from a scheduled message
+pollVoteRestrictionReasonScheduled = PollVoteRestrictionReason;
+
+//@description The poll is from a quick reply message
+pollVoteRestrictionReasonQuickReply = PollVoteRestrictionReason;
+
 //@description The user is from a country, users from which aren't allowed to vote
 //@country_code Two-letter ISO 3166-1 alpha-2 code of the current user's country
-pollVoteRestrictionReasonUnallowedCountry country_code:string = PollVoteRestrictionReason;
+pollVoteRestrictionReasonCountryRestricted country_code:string = PollVoteRestrictionReason;
 
 //@description The user must be a member of the chat for at least a day to vote
 pollVoteRestrictionReasonMembershipRequired = PollVoteRestrictionReason;

@@ -666,33 +666,49 @@ vector<int32> PollManager::get_vote_percentage(const vector<int32> &voter_counts
 }
 
 td_api::object_ptr<td_api::PollVoteRestrictionReason> PollManager::get_poll_vote_restriction_reason_object(
-    PollId poll_id, const Poll *poll) const {
+    PollId poll_id, const Poll *poll, DialogId dialog_id, MessageId message_id) const {
   if (td_->auth_manager_->is_bot()) {
     return nullptr;
-  }
-  if (is_local_poll_id(poll_id)) {
-    return td_api::make_object<td_api::pollVoteRestrictionReasonPending>();
   }
   if (poll->is_closed_) {
     return td_api::make_object<td_api::pollVoteRestrictionReasonClosed>();
   }
-  if (!poll->country_codes_.empty() &&
-      !td::contains(poll->country_codes_, td_->option_manager_->get_option_string("phone_country_iso2"))) {
-    return td_api::make_object<td_api::pollVoteRestrictionReasonUnallowedCountry>();
+  if (message_id.is_valid() || message_id.is_scheduled()) {
+    if (message_id.is_local()) {
+      return td_api::make_object<td_api::pollVoteRestrictionReasonClosed>();
+    }
+    if (message_id.is_yet_unsent()) {
+      return td_api::make_object<td_api::pollVoteRestrictionReasonYetUnsent>();
+    }
+    if (message_id.is_scheduled()) {
+      return td_api::make_object<td_api::pollVoteRestrictionReasonScheduled>();
+    }
+  }
+  if (dialog_id == DialogId()) {
+    return td_api::make_object<td_api::pollVoteRestrictionReasonQuickReply>();
+  }
+  CHECK(!is_local_poll_id(poll_id));
+  if (!poll->country_codes_.empty()) {
+    auto country_code = td_->option_manager_->get_option_string("phone_country_iso2");
+    if (!td::contains(poll->country_codes_, country_code)) {
+      return td_api::make_object<td_api::pollVoteRestrictionReasonCountryRestricted>(country_code);
+    }
   }
   if (poll->subscribers_only_) {
-    // TODO we must check date of join to the original chat
+    // TODO we must check date of join to the original chat, not dialog_id
   }
   return nullptr;
 }
 
-td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id) const {
+td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, DialogId dialog_id,
+                                                              MessageId message_id) const {
   auto poll = get_poll(poll_id);
   CHECK(poll != nullptr);
-  return get_poll_object(poll_id, poll);
+  return get_poll_object(poll_id, poll, dialog_id, message_id);
 }
 
-td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, const Poll *poll) const {
+td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, const Poll *poll, DialogId dialog_id,
+                                                              MessageId message_id) const {
   auto poll_options = transform(
       poll->options_, [td = td_](const PollOption &poll_option) { return poll_option.get_poll_option_object(td); });
   int32 voter_count_diff = 0;
@@ -789,8 +805,8 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
   }
 
   vector<td_api::object_ptr<td_api::MessageSender>> recent_voters;
-  for (auto dialog_id : poll->recent_voter_dialog_ids_) {
-    auto recent_voter = get_min_message_sender_object(td_, dialog_id, "get_poll_object");
+  for (auto recent_voter_dialog_id : poll->recent_voter_dialog_ids_) {
+    auto recent_voter = get_min_message_sender_object(td_, recent_voter_dialog_id, "get_poll_object");
     if (recent_voter != nullptr) {
       recent_voters.push_back(std::move(recent_voter));
     }
@@ -813,7 +829,7 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
       total_voter_count, std::move(recent_voters), can_get_voters && !poll->is_anonymous_, poll->is_anonymous_,
       poll->allow_multiple_answers_, !poll->has_revoting_disabled_, poll->subscribers_only_,
       vector<string>(poll->country_codes_), std::move(option_order), std::move(poll_type), open_period, close_date,
-      poll->is_closed_, get_poll_vote_restriction_reason_object(poll_id, poll));
+      poll->is_closed_, get_poll_vote_restriction_reason_object(poll_id, poll, dialog_id, message_id));
 }
 
 PollId PollManager::create_poll(FormattedText &&question, vector<FormattedText> &&options, bool is_anonymous,
@@ -2333,7 +2349,9 @@ PollId PollManager::on_get_poll(PollId poll_id, tl_object_ptr<telegram_api::poll
     notify_on_poll_update(poll_id);
   }
   if (need_update_poll && (is_changed || (poll->is_closed_ && being_closed_polls_.erase(poll_id) != 0))) {
-    send_closure(G()->td(), &Td::send_update, td_api::make_object<td_api::updatePoll>(get_poll_object(poll_id, poll)));
+    CHECK(td_->auth_manager_->is_bot());
+    send_closure(G()->td(), &Td::send_update,
+                 td_api::make_object<td_api::updatePoll>(get_poll_object(poll_id, poll, DialogId(), MessageId())));
 
     schedule_poll_unload(poll_id);
   }
