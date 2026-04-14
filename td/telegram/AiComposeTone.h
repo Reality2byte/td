@@ -56,4 +56,28 @@ inline bool operator!=(const AiComposeTone &lhs, const AiComposeTone &rhs) {
   return !(lhs == rhs);
 }
 
+class AiComposeTones {
+  vector<AiComposeTone> tones_;
+  int64 hash_ = 0;
+
+  friend bool operator==(const AiComposeTones &lhs, const AiComposeTones &rhs);
+
+ public:
+  AiComposeTones(Td *td, telegram_api::object_ptr<telegram_api::aicompose_tones> &&tones);
+
+  td_api::object_ptr<td_api::updateTextCompositionStyles> get_update_text_composition_styles_object(Td *td) const;
+
+  template <class StorerT>
+  void store(StorerT &storer) const;
+
+  template <class ParserT>
+  void parse(ParserT &parser);
+};
+
+bool operator==(const AiComposeTones &lhs, const AiComposeTones &rhs);
+
+inline bool operator!=(const AiComposeTones &lhs, const AiComposeTones &rhs) {
+  return !(lhs == rhs);
+}
+
 }  // namespace td

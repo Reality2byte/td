@@ -93,4 +93,20 @@ void AiComposeTone::parse(ParserT &parser) {
   }
 }
 
+template <class StorerT>
+void AiComposeTones::store(StorerT &storer) const {
+  BEGIN_STORE_FLAGS();
+  END_STORE_FLAGS();
+  td::store(tones_, storer);
+  td::store(hash_, storer);
+}
+
+template <class ParserT>
+void AiComposeTones::parse(ParserT &parser) {
+  BEGIN_PARSE_FLAGS();
+  END_PARSE_FLAGS();
+  td::parse(tones_, parser);
+  td::parse(hash_, parser);
+}
+
 }  // namespace td

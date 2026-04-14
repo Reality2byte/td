@@ -10,6 +10,7 @@
 #include "td/telegram/Td.h"
 #include "td/telegram/UserManager.h"
 
+#include "td/utils/algorithm.h"
 #include "td/utils/logging.h"
 
 namespace td {
@@ -67,6 +68,25 @@ bool operator==(const AiComposeTone &lhs, const AiComposeTone &rhs) {
          lhs.title_ == rhs.title_ && lhs.is_creator_ == rhs.is_creator_ && lhs.id_ == rhs.id_ &&
          lhs.access_hash_ == rhs.access_hash_ && lhs.install_count_ == rhs.install_count_ &&
          lhs.prompt_ == rhs.prompt_ && lhs.author_user_id_ == rhs.author_user_id_;
+}
+
+AiComposeTones::AiComposeTones(Td *td, telegram_api::object_ptr<telegram_api::aicompose_tones> &&tones) {
+  CHECK(tones != nullptr);
+  td->user_manager_->on_get_users(std::move(tones->users_), "AiComposeTones");
+  for (auto &tone : tones->tones_) {
+    tones_.emplace_back(std::move(tone));
+  }
+  hash_ = tones->hash_;
+}
+
+td_api::object_ptr<td_api::updateTextCompositionStyles> AiComposeTones::get_update_text_composition_styles_object(
+    Td *td) const {
+  return td_api::make_object<td_api::updateTextCompositionStyles>(
+      transform(tones_, [td](const AiComposeTone &tone) { return tone.get_text_composition_style_object(td); }));
+}
+
+bool operator==(const AiComposeTones &lhs, const AiComposeTones &rhs) {
+  return lhs.hash_ == rhs.hash_ && lhs.tones_ == rhs.tones_;
 }
 
 }  // namespace td
