@@ -5002,13 +5002,13 @@ void UpdatesManager::on_update(tl_object_ptr<telegram_api::updateStarsRevenueSta
   promise.set_value(Unit());
 }
 
+void UpdatesManager::on_update(tl_object_ptr<telegram_api::updateAiComposeTones> update, Promise<Unit> &&promise) {
+  td_->translation_manager_->reload_ai_compose_tones();
+}
+
 // unsupported updates
 
 void UpdatesManager::on_update(tl_object_ptr<telegram_api::updateNewStoryReaction> update, Promise<Unit> &&promise) {
-  promise.set_value(Unit());
-}
-
-void UpdatesManager::on_update(tl_object_ptr<telegram_api::updateAiComposeTones> update, Promise<Unit> &&promise) {
   promise.set_value(Unit());
 }
 
