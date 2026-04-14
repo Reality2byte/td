@@ -1385,14 +1385,20 @@ bool PollManager::can_get_poll_voters(PollId poll_id, const Poll *poll) const {
   if (td_->auth_manager_->is_bot() || is_local_poll_id(poll_id)) {
     return false;
   }
-  bool is_voted = false;
-  auto it = pending_answers_.find(poll_id);
-  if (it == pending_answers_.end() || (it->second.is_finished_ && poll->was_saved_)) {
-    for (const auto &poll_option : poll->options_) {
-      is_voted |= poll_option.is_chosen_;
+  if (poll->is_closed_ || poll->is_creator_) {
+    return true;
+  }
+  if (!poll->hide_results_until_close_) {
+    auto it = pending_answers_.find(poll_id);
+    if (it == pending_answers_.end() || (it->second.is_finished_ && poll->was_saved_)) {
+      for (const auto &poll_option : poll->options_) {
+        if (poll_option.is_chosen_) {
+          return true;
+        }
+      }
     }
   }
-  return (is_voted && !poll->hide_results_until_close_) || poll->is_closed_ || poll->is_creator_;
+  return false;
 }
 
 void PollManager::get_poll_voters(MessageFullId message_full_id, int32 option_id, int32 offset, int32 limit,
