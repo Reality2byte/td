@@ -665,6 +665,27 @@ vector<int32> PollManager::get_vote_percentage(const vector<int32> &voter_counts
   return result;
 }
 
+td_api::object_ptr<td_api::PollVoteRestrictionReason> PollManager::get_poll_vote_restriction_reason_object(
+    PollId poll_id, const Poll *poll) const {
+  if (td_->auth_manager_->is_bot()) {
+    return nullptr;
+  }
+  if (is_local_poll_id(poll_id)) {
+    return td_api::make_object<td_api::pollVoteRestrictionReasonPending>();
+  }
+  if (poll->is_closed_) {
+    return td_api::make_object<td_api::pollVoteRestrictionReasonClosed>();
+  }
+  if (!poll->country_codes_.empty() &&
+      !td::contains(poll->country_codes_, td_->option_manager_->get_option_string("phone_country_iso2"))) {
+    return td_api::make_object<td_api::pollVoteRestrictionReasonUnallowedCountry>();
+  }
+  if (poll->subscribers_only_) {
+    // TODO we must check date of join to the original chat
+  }
+  return nullptr;
+}
+
 td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id) const {
   auto poll = get_poll(poll_id);
   CHECK(poll != nullptr);
@@ -792,7 +813,7 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
       total_voter_count, std::move(recent_voters), can_get_voters && !poll->is_anonymous_, poll->is_anonymous_,
       poll->allow_multiple_answers_, !poll->has_revoting_disabled_, poll->subscribers_only_,
       vector<string>(poll->country_codes_), std::move(option_order), std::move(poll_type), open_period, close_date,
-      poll->is_closed_);
+      poll->is_closed_, get_poll_vote_restriction_reason_object(poll_id, poll));
 }
 
 PollId PollManager::create_poll(FormattedText &&question, vector<FormattedText> &&options, bool is_anonymous,

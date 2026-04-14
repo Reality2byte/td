@@ -445,6 +445,22 @@ inputPollTypeRegular allow_adding_options:Bool = InputPollType;
 inputPollTypeQuiz correct_option_ids:vector<int32> explanation:formattedText = InputPollType;
 
 
+//@class PollVoteRestrictionReason @description Reason of vote restriction in the poll for the current user
+
+//@description The poll isn't sent yet
+pollVoteRestrictionReasonPending = PollVoteRestrictionReason;
+
+//@description The poll is closed
+pollVoteRestrictionReasonClosed = PollVoteRestrictionReason;
+
+//@description The user is from a country, users from which aren't allowed to vote
+//@country_code Two-letter ISO 3166-1 alpha-2 code of the current user's country
+pollVoteRestrictionReasonUnallowedCountry country_code:string = PollVoteRestrictionReason;
+
+//@description The user must be a member of the chat for at least a day to vote
+pollVoteRestrictionReasonMembershipRequired = PollVoteRestrictionReason;
+
+
 //@description Describes a task in a checklist
 //@id Unique identifier of the task
 //@text Text of the task; may contain only Bold, Italic, Underline, Strikethrough, Spoiler, CustomEmoji, DateTime and automatically found entities
@@ -633,7 +649,8 @@ webApp short_name:string title:string description:string photo:photo animation:a
 //@open_period Amount of time the poll will be active after creation, in seconds
 //@close_date Point in time (Unix timestamp) when the poll will automatically be closed
 //@is_closed True, if the poll is closed
-poll id:int64 question:formattedText options:vector<pollOption> total_voter_count:int32 recent_voter_ids:vector<MessageSender> can_get_voters:Bool is_anonymous:Bool allows_multiple_answers:Bool allows_revoting:Bool member_only:Bool country_codes:vector<string> option_order:vector<int32> type:PollType open_period:int32 close_date:int32 is_closed:Bool = Poll;
+//@vote_restriction_reason The reason describing, why the current user can't vote in the poll; may be null if the user can vote in the poll
+poll id:int64 question:formattedText options:vector<pollOption> total_voter_count:int32 recent_voter_ids:vector<MessageSender> can_get_voters:Bool is_anonymous:Bool allows_multiple_answers:Bool allows_revoting:Bool member_only:Bool country_codes:vector<string> option_order:vector<int32> type:PollType open_period:int32 close_date:int32 is_closed:Bool vote_restriction_reason:PollVoteRestrictionReason = Poll;
 
 
 //@description Describes an alternative re-encoded quality of a video file
