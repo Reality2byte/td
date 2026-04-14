@@ -6,6 +6,7 @@
 //
 #pragma once
 
+#include "td/telegram/AiComposeTone.h"
 #include "td/telegram/MessageEntity.h"
 #include "td/telegram/MessageFullId.h"
 #include "td/telegram/td_api.h"
@@ -46,7 +47,7 @@ class TranslationManager final : public Actor {
   void proofread_message_with_ai(td_api::object_ptr<td_api::formattedText> &&text,
                                  Promise<td_api::object_ptr<td_api::fixedText>> &&promise);
 
-  void on_update_ai_compose_styles(vector<string> &&ai_compose_styles);
+  void reload_ai_compose_tones();
 
   void get_current_state(vector<td_api::object_ptr<td_api::Update>> &updates) const;
 
@@ -61,16 +62,14 @@ class TranslationManager final : public Actor {
                                bool skip_bot_commands, int32 max_media_timestamp,
                                Promise<td_api::object_ptr<td_api::formattedText>> &&promise);
 
-  static string get_ai_compose_styles_key();
-
-  td_api::object_ptr<td_api::updateTextCompositionStyles> get_update_text_composition_styles() const;
+  static string get_ai_compose_tones_key();
 
   void send_update_text_composition_styles() const;
 
   Td *td_;
   ActorShared<> parent_;
 
-  vector<string> ai_compose_styles_;
+  AiComposeTones ai_compose_tones_;
 };
 
 }  // namespace td

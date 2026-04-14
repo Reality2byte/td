@@ -63,6 +63,8 @@ class AiComposeTones {
   friend bool operator==(const AiComposeTones &lhs, const AiComposeTones &rhs);
 
  public:
+  AiComposeTones() = default;
+
   AiComposeTones(Td *td, telegram_api::object_ptr<telegram_api::aicompose_tones> &&tones);
 
   td_api::object_ptr<td_api::updateTextCompositionStyles> get_update_text_composition_styles_object(Td *td) const;

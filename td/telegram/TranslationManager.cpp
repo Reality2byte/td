@@ -7,6 +7,7 @@
 #include "td/telegram/TranslationManager.h"
 
 #include "td/telegram/AccessRights.h"
+#include "td/telegram/AiComposeTone.hpp"
 #include "td/telegram/AuthManager.h"
 #include "td/telegram/DialogManager.h"
 #include "td/telegram/DiffText.h"
@@ -174,9 +175,10 @@ TranslationManager::TranslationManager(Td *td, ActorShared<> parent) : td_(td), 
 
 void TranslationManager::start_up() {
   if (td_->auth_manager_->is_authorized() && !td_->auth_manager_->is_bot()) {
-    auto ai_compose_styles_log_event_string = G()->td_db()->get_binlog_pmc()->get(get_ai_compose_styles_key());
-    if (!ai_compose_styles_log_event_string.empty()) {
-      log_event_parse(ai_compose_styles_, ai_compose_styles_log_event_string).ensure();
+    auto ai_compose_tones_log_event_string = G()->td_db()->get_binlog_pmc()->get(get_ai_compose_tones_key());
+    if (!ai_compose_tones_log_event_string.empty() &&
+        log_event_parse(ai_compose_tones_, ai_compose_tones_log_event_string).is_error()) {
+      ai_compose_tones_ = {};
     }
     send_update_text_composition_styles();
   }
@@ -287,35 +289,16 @@ void TranslationManager::proofread_message_with_ai(td_api::object_ptr<td_api::fo
   td_->create_handler<ProofreadMessageWithAiQuery>(std::move(promise))->send(input_text);
 }
 
-string TranslationManager::get_ai_compose_styles_key() {
+string TranslationManager::get_ai_compose_tones_key() {
   return "ai_compose_styles";
 }
 
-void TranslationManager::on_update_ai_compose_styles(vector<string> &&ai_compose_styles) {
-  if (ai_compose_styles == ai_compose_styles_) {
-    return;
-  }
-  ai_compose_styles_ = std::move(ai_compose_styles);
-  G()->td_db()->get_binlog_pmc()->set(get_ai_compose_styles_key(),
-                                      log_event_store(ai_compose_styles_).as_slice().str());
-  if (td_->auth_manager_->is_authorized()) {
-    send_update_text_composition_styles();
-  }
-}
-
-td_api::object_ptr<td_api::updateTextCompositionStyles> TranslationManager::get_update_text_composition_styles() const {
-  CHECK(ai_compose_styles_.size() % 3 == 0);
-  auto result = td_api::make_object<td_api::updateTextCompositionStyles>();
-  for (size_t i = 0; i < ai_compose_styles_.size(); i += 3) {
-    result->styles_.push_back(td_api::make_object<td_api::textCompositionStyle>(
-        ai_compose_styles_[i], to_integer<int64>(ai_compose_styles_[i + 1]), ai_compose_styles_[i + 2], false, false, 0,
-        string(), 0));
-  }
-  return result;
+void TranslationManager::reload_ai_compose_tones() {
+  // TODO
 }
 
 void TranslationManager::send_update_text_composition_styles() const {
-  send_closure(G()->td(), &Td::send_update, get_update_text_composition_styles());
+  send_closure(G()->td(), &Td::send_update, ai_compose_tones_.get_update_text_composition_styles_object(td_));
 }
 
 void TranslationManager::get_current_state(vector<td_api::object_ptr<td_api::Update>> &updates) const {
@@ -323,7 +306,7 @@ void TranslationManager::get_current_state(vector<td_api::object_ptr<td_api::Upd
     return;
   }
 
-  updates.push_back(get_update_text_composition_styles());
+  updates.push_back(ai_compose_tones_.get_update_text_composition_styles_object(td_));
 }
 
 }  // namespace td
