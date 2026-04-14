@@ -1398,6 +1398,10 @@ bool PollManager::can_get_poll_voters(PollId poll_id, const Poll *poll) const {
       }
     }
   }
+  if (!poll->country_codes_.empty() &&
+      !td::contains(poll->country_codes_, td_->option_manager_->get_option_string("phone_country_iso2"))) {
+    return true;
+  }
   return false;
 }
 
