@@ -11389,11 +11389,19 @@ getMessageLinkInfo url:string = MessageLinkInfo;
 
 
 //@description Creates a custom text composition style
-//@title Title of the style
+//@title Title of the style; 1-64 characters
 //@custom_emoji_id Identifier of the custom emoji corresponding to the style
-//@prompt Prompt that will be used for text composition
+//@prompt Prompt that will be used for text composition; 1-512 characters
 //@show_creator True, if the current user should be shown as the creator of the style
 createTextCompositionStyle title:string custom_emoji_id:int64 prompt:string show_creator:Bool = TextCompositionStyle;
+
+//@description Edits a custom text composition style that was created by the current user
+//@name Name of the style
+//@title Title of the style; 1-64 characters
+//@custom_emoji_id Identifier of the custom emoji corresponding to the style
+//@prompt Prompt that will be used for text composition; 1-512 characters
+//@show_creator True, if the current user should be shown as the creator of the style
+editTextCompositionStyle name:string title:string custom_emoji_id:int64 prompt:string show_creator:Bool = TextCompositionStyle;
 
 
 //@description Translates a text to the given language; must not be used in secret chats. If the current user is a Telegram Premium user, then text formatting is preserved

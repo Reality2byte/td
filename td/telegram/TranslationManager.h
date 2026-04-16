@@ -54,6 +54,9 @@ class TranslationManager final : public Actor {
   void create_tone(const string &title, CustomEmojiId custom_emoji_id, const string &prompt, bool show_creator,
                    Promise<td_api::object_ptr<td_api::textCompositionStyle>> &&promise);
 
+  void update_tone(const string &name, const string &title, CustomEmojiId custom_emoji_id, const string &prompt,
+                   bool show_creator, Promise<td_api::object_ptr<td_api::textCompositionStyle>> &&promise);
+
   void get_current_state(vector<td_api::object_ptr<td_api::Update>> &updates) const;
 
  private:
@@ -69,6 +72,9 @@ class TranslationManager final : public Actor {
 
   void do_create_tone(const string &title, CustomEmojiId custom_emoji_id, const string &prompt, bool show_creator,
                       Promise<td_api::object_ptr<td_api::textCompositionStyle>> &&promise);
+
+  void do_update_tone(const string &name, const string &title, CustomEmojiId custom_emoji_id, const string &prompt,
+                      bool show_creator, Promise<td_api::object_ptr<td_api::textCompositionStyle>> &&promise);
 
   static string get_ai_compose_tones_key();
 

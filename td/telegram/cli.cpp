@@ -4992,6 +4992,14 @@ class CliClient final : public Actor {
       get_args(args, title, custom_emoji_id, prompt);
       send_request(
           td_api::make_object<td_api::createTextCompositionStyle>(title, custom_emoji_id, prompt, op == "ctcsp"));
+    } else if (op == "etcs" || op == "etcsp") {
+      string name;
+      string title;
+      int64 custom_emoji_id;
+      string prompt;
+      get_args(args, name, title, custom_emoji_id, prompt);
+      send_request(
+          td_api::make_object<td_api::editTextCompositionStyle>(name, title, custom_emoji_id, prompt, op == "etcsp"));
     } else if (op == "tt" || op == "ttf" || op == "ttc" || op == "ttn") {
       string text;
       string to_language_code;
