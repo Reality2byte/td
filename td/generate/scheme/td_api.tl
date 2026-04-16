@@ -126,6 +126,11 @@ diffText text:string entities:vector<diffEntity> = DiffText;
 fixedText text:formattedText diff_text:diffText = FixedText;
 
 
+//@description Contains an example of text composition style usage
+//@source_text Source text
+//@result_text The text after the style was applied to the source text
+textCompositionStyleExample source_text:formattedText result_text:formattedText = TextCompositionStyleExample;
+
 //@description Describes a style that can be used to compose a text
 //@name Name of the style
 //@custom_emoji_id Identifier of the custom emoji corresponding to the style; 0 if none
