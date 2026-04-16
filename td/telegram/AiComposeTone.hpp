@@ -7,6 +7,7 @@
 #pragma once
 
 #include "td/telegram/AiComposeTone.h"
+#include "td/telegram/AiComposeToneExample.hpp"
 
 #include "td/utils/common.h"
 #include "td/utils/tl_helpers.h"
@@ -21,6 +22,7 @@ void AiComposeTone::store(StorerT &storer) const {
   bool has_install_count = install_count_ != 0;
   bool has_author_user_id = author_user_id_ != UserId();
   bool has_prompt = !prompt_.empty();
+  bool has_english_example = !english_example_.is_empty();
   BEGIN_STORE_FLAGS();
   STORE_FLAG(is_creator_);
   STORE_FLAG(has_custom_emoji_id);
@@ -29,6 +31,7 @@ void AiComposeTone::store(StorerT &storer) const {
   STORE_FLAG(has_install_count);
   STORE_FLAG(has_author_user_id);
   STORE_FLAG(has_prompt);
+  STORE_FLAG(has_english_example);
   END_STORE_FLAGS();
   td::store(type_, storer);
   td::store(slug_, storer);
@@ -51,6 +54,9 @@ void AiComposeTone::store(StorerT &storer) const {
   if (has_prompt) {
     td::store(prompt_, storer);
   }
+  if (has_english_example) {
+    td::store(english_example_, storer);
+  }
 }
 
 template <class ParserT>
@@ -61,6 +67,7 @@ void AiComposeTone::parse(ParserT &parser) {
   bool has_install_count;
   bool has_author_user_id;
   bool has_prompt;
+  bool has_english_example;
   BEGIN_PARSE_FLAGS();
   PARSE_FLAG(is_creator_);
   PARSE_FLAG(has_custom_emoji_id);
@@ -69,6 +76,7 @@ void AiComposeTone::parse(ParserT &parser) {
   PARSE_FLAG(has_install_count);
   PARSE_FLAG(has_author_user_id);
   PARSE_FLAG(has_prompt);
+  PARSE_FLAG(has_english_example);
   END_PARSE_FLAGS();
   td::parse(type_, parser);
   td::parse(slug_, parser);
@@ -90,6 +98,9 @@ void AiComposeTone::parse(ParserT &parser) {
   }
   if (has_prompt) {
     td::parse(prompt_, parser);
+  }
+  if (has_english_example) {
+    td::parse(english_example_, parser);
   }
 }
 

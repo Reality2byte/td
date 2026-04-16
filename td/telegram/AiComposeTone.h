@@ -6,6 +6,7 @@
 //
 #pragma once
 
+#include "td/telegram/AiComposeToneExample.h"
 #include "td/telegram/CustomEmojiId.h"
 #include "td/telegram/td_api.h"
 #include "td/telegram/telegram_api.h"
@@ -32,6 +33,7 @@ class AiComposeTone {
   int32 install_count_ = 0;
   string prompt_;
   UserId author_user_id_;
+  AiComposeToneExample english_example_;
 
   friend bool operator==(const AiComposeTone &lhs, const AiComposeTone &rhs);
 

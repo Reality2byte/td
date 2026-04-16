@@ -30,6 +30,7 @@ AiComposeTone::AiComposeTone(telegram_api::object_ptr<telegram_api::AiComposeTon
       install_count_ = tone->installs_count_;
       prompt_ = std::move(tone->prompt_);
       author_user_id_ = UserId(tone->author_id_);
+      english_example_ = AiComposeToneExample(std::move(tone->example_english_));
       break;
     }
     case telegram_api::aiComposeToneDefault::ID: {
@@ -56,7 +57,8 @@ AiComposeTone::AiComposeTone(telegram_api::object_ptr<telegram_api::AiComposeTon
 td_api::object_ptr<td_api::textCompositionStyle> AiComposeTone::get_text_composition_style_object(Td *td) const {
   return td_api::make_object<td_api::textCompositionStyle>(
       slug_, custom_emoji_id_.get(), title_, type_ == Type::Custom, is_creator_, install_count_, prompt_,
-      td->user_manager_->get_user_id_object(author_user_id_, "textCompositionStyle"));
+      td->user_manager_->get_user_id_object(author_user_id_, "textCompositionStyle"),
+      english_example_.get_text_composition_style_example_object());
 }
 
 telegram_api::object_ptr<telegram_api::InputAiComposeTone> AiComposeTone::get_input_ai_compose_tone() const {
@@ -79,7 +81,8 @@ bool operator==(const AiComposeTone &lhs, const AiComposeTone &rhs) {
   return lhs.type_ == rhs.type_ && lhs.slug_ == rhs.slug_ && lhs.custom_emoji_id_ == rhs.custom_emoji_id_ &&
          lhs.title_ == rhs.title_ && lhs.is_creator_ == rhs.is_creator_ && lhs.id_ == rhs.id_ &&
          lhs.access_hash_ == rhs.access_hash_ && lhs.install_count_ == rhs.install_count_ &&
-         lhs.prompt_ == rhs.prompt_ && lhs.author_user_id_ == rhs.author_user_id_;
+         lhs.prompt_ == rhs.prompt_ && lhs.author_user_id_ == rhs.author_user_id_ &&
+         lhs.english_example_ == rhs.english_example_;
 }
 
 AiComposeTones::AiComposeTones(Td *td, telegram_api::object_ptr<telegram_api::aicompose_tones> &&tones) {
