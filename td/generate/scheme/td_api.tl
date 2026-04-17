@@ -783,6 +783,11 @@ botCommands bot_user_id:int53 commands:vector<botCommand> = BotCommands;
 //@url URL of a Web App to open when the button is pressed. If the link is of the type internalLinkTypeWebApp, then it must be processed accordingly. Otherwise, the link must be passed to openWebApp
 botMenuButton text:string url:string = BotMenuButton;
 
+//@description Describes users that have access to a bot
+//@is_restricted True, if access to the bot is restricted to its owner and selected users
+//@added_user_ids Identifiers of the users who can use the bot additionally to the owner of the bot
+botAccessSettings is_restricted:Bool added_user_ids:vector<int53> = BotAccessSettings;
+
 
 //@description Describes parameters of verification that is provided by a bot
 //@icon_custom_emoji_id Identifier of the custom emoji that is used as the verification sign

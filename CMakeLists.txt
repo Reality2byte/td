@@ -361,6 +361,7 @@ set(TDLIB_SOURCE_PART1
   td/telegram/BaseTheme.cpp
   td/telegram/Birthdate.cpp
   td/telegram/BoostManager.cpp
+  td/telegram/BotAccessSettings.cpp
   td/telegram/BotCommand.cpp
   td/telegram/BotCommandScope.cpp
   td/telegram/BotInfoManager.cpp
@@ -724,6 +725,7 @@ set(TDLIB_SOURCE_PART2
   td/telegram/BotVerifierSettings.h
   td/telegram/BlockListId.h
   td/telegram/BoostManager.h
+  td/telegram/BotAccessSettings.h
   td/telegram/BotCommand.h
   td/telegram/BotCommandScope.h
   td/telegram/BotInfoManager.h

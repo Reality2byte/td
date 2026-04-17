@@ -302,6 +302,7 @@ function split_file($file, $chunks, $undo) {
             'BackgroundType' => 'BackgroundType',
             'Birthdate' => 'Birthdate',
             'boost_manager[_(-](?![.]get[(][)])|BoostManager' => 'BoostManager',
+            'BotAccessSettings' => 'BotAccessSettings',
             'bot_info_manager[_(-](?![.]get[(][)])|BotInfoManager' => 'BotInfoManager',
             'BotMenuButton|[a-z_]*_menu_button' => 'BotMenuButton',
             'send_bot_custom_query|answer_bot_custom_query|set_bot_updates_status' => 'BotQueries',
