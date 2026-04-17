@@ -9042,6 +9042,11 @@ internalLinkTypeStory story_poster_username:string story_id:int32 = InternalLink
 //@story_album_id Story album identifier
 internalLinkTypeStoryAlbum story_album_owner_username:string story_album_id:int32 = InternalLinkType;
 
+//@description The link is a link to a text composition style. Call searchTextCompositionStyle with the given style name to get information about the style.
+//-If the style is found and the user wants to add it, then call addTextCompositionStyle
+//@style_name Name of the style
+internalLinkTypeTextCompositionStyle style_name:string = InternalLinkType;
+
 //@description The link is a link to a cloud theme. TDLib has no theme support yet @theme_name Name of the theme
 internalLinkTypeTheme theme_name:string = InternalLinkType;
 

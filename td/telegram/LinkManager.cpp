@@ -89,6 +89,10 @@ static bool is_valid_game_name(Slice name) {
   return name.size() >= 3 && is_valid_username(name);
 }
 
+static bool is_valid_text_composition_style_name(CSlice name) {
+  return name.size() >= 8u && is_base64url_characters(name);
+}
+
 static bool is_valid_theme_name(CSlice name) {
   return !name.empty() && check_utf8(name);
 }
@@ -1380,6 +1384,18 @@ class LinkManager::InternalLinkStoryAlbum final : public InternalLink {
   }
 };
 
+class LinkManager::InternalLinkTextCompositionStyle final : public InternalLink {
+  string style_name_;
+
+  td_api::object_ptr<td_api::InternalLinkType> get_internal_link_type_object() const final {
+    return td_api::make_object<td_api::internalLinkTypeTextCompositionStyle>(style_name_);
+  }
+
+ public:
+  explicit InternalLinkTextCompositionStyle(string &&style_name) : style_name_(std::move(style_name)) {
+  }
+};
+
 class LinkManager::InternalLinkTheme final : public InternalLink {
   string theme_name_;
 
@@ -2017,9 +2033,9 @@ LinkManager::LinkInfo LinkManager::get_link_info(Slice link) {
     if (ends_with(host, ".t.me") && host.size() >= 9 && host.find('.') == host.size() - 5) {
       Slice subdomain(&host[0], host.size() - 5);
       static const FlatHashSet<Slice, SliceHash> disallowed_subdomains(
-          {"addemoji",     "addlist",     "addstickers", "addtheme", "auction",  "auth",  "boost", "call",
-           "confirmphone", "contact",     "giftcode",    "invoice",  "joinchat", "login", "m",     "nft",
-           "proxy",        "setlanguage", "share",       "socks",    "web",      "a",     "k",     "z"});
+          {"addemoji",     "addlist", "addstickers", "addstyle", "addtheme", "auction", "auth", "boost", "call",
+           "confirmphone", "contact", "giftcode",    "invoice",  "joinchat", "login",   "m",    "nft",   "proxy",
+           "setlanguage",  "share",   "socks",       "web",      "a",        "k",       "z"});
       if (is_valid_username(subdomain) && disallowed_subdomains.count(subdomain) == 0) {
         result.type_ = LinkType::TMe;
         result.query_ = PSTRING() << '/' << subdomain << http_url.query_;
@@ -2426,6 +2442,12 @@ unique_ptr<LinkManager::InternalLink> LinkManager::parse_tg_link_query(Slice que
     if (is_valid_language_pack_id(language_pack_id)) {
       return td::make_unique<InternalLinkLanguage>(std::move(language_pack_id));
     }
+  } else if (path.size() == 1 && path[0] == "addstyle") {
+    // addstyle?slug=<name>
+    auto style_name = get_arg("slug");
+    if (is_valid_text_composition_style_name(style_name)) {
+      return td::make_unique<InternalLinkTextCompositionStyle>(std::move(style_name));
+    }
   } else if (path.size() == 1 && path[0] == "addtheme") {
     // addtheme?slug=<name>
     auto theme_name = get_arg("slug");
@@ -2664,6 +2686,12 @@ unique_ptr<LinkManager::InternalLink> LinkManager::parse_t_me_link_query(Slice q
       // /setlanguage/<name>
       auto language_pack_id = path[1];
       return td::make_unique<InternalLinkLanguage>(std::move(language_pack_id));
+    }
+  } else if (path[0] == "addstyle") {
+    if (path.size() >= 2 && is_valid_text_composition_style_name(path[1])) {
+      // /addstyle/<name>
+      auto style_name = path[1];
+      return td::make_unique<InternalLinkTextCompositionStyle>(std::move(style_name));
     }
   } else if (path[0] == "addtheme") {
     if (path.size() >= 2 && is_valid_theme_name(path[1])) {
@@ -3811,6 +3839,17 @@ Result<string> LinkManager::get_internal_link_impl(const td_api::InternalLinkTyp
                          << "&album=" << link->story_album_id_;
       } else {
         return PSTRING() << get_t_me_url() << link->story_album_owner_username_ << "/a/" << link->story_album_id_;
+      }
+    }
+    case td_api::internalLinkTypeTextCompositionStyle::ID: {
+      auto link = static_cast<const td_api::internalLinkTypeTextCompositionStyle *>(type_ptr);
+      if (!is_valid_text_composition_style_name(link->style_name_)) {
+        return Status::Error(400, "Invalid style name specified");
+      }
+      if (is_internal) {
+        return PSTRING() << "tg://addstyle?slug=" << url_encode(link->style_name_);
+      } else {
+        return PSTRING() << get_t_me_url() << "addstyle/" << url_encode(link->style_name_);
       }
     }
     case td_api::internalLinkTypeTheme::ID: {

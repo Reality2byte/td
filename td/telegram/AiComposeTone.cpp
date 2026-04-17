@@ -11,6 +11,7 @@
 #include "td/telegram/UserManager.h"
 
 #include "td/utils/algorithm.h"
+#include "td/utils/base64.h"
 #include "td/utils/logging.h"
 
 namespace td {
@@ -109,6 +110,9 @@ Result<telegram_api::object_ptr<telegram_api::InputAiComposeTone>> AiComposeTone
     if (tone.has_name(name)) {
       return tone.get_input_ai_compose_tone();
     }
+  }
+  if (!name.empty() && is_base64url_characters(name)) {
+    return telegram_api::make_object<telegram_api::inputAiComposeToneSlug>(name);
   }
   return Status::Error(400, "Style not found");
 }
