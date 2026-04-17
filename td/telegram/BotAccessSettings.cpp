@@ -29,6 +29,18 @@ BotAccessSettings::BotAccessSettings(Td *td, telegram_api::object_ptr<telegram_a
   }
 }
 
+BotAccessSettings::BotAccessSettings(td_api::object_ptr<td_api::botAccessSettings> &&settings) {
+  if (settings != nullptr) {
+    is_restricted_ = settings->is_restricted_;
+    for (auto added_user_id : settings->added_user_ids_) {
+      UserId user_id(added_user_id);
+      if (user_id.is_valid()) {
+        added_user_ids_.push_back(user_id);
+      }
+    }
+  }
+}
+
 td_api::object_ptr<td_api::botAccessSettings> BotAccessSettings::get_bot_access_settings_object(Td *td) const {
   return td_api::make_object<td_api::botAccessSettings>(
       is_restricted_, td->user_manager_->get_user_ids_object(added_user_ids_, "botAccessSettings"));

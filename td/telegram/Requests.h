@@ -1350,6 +1350,8 @@ class Requests {
 
   void on_request(uint64 id, const td_api::getManagedBotAccessSettings &request);
 
+  void on_request(uint64 id, td_api::setManagedBotAccessSettings &request);
+
   void on_request(uint64 id, td_api::setBotName &request);
 
   void on_request(uint64 id, const td_api::getBotName &request);

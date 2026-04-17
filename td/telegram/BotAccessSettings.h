@@ -23,6 +23,8 @@ class BotAccessSettings {
  public:
   BotAccessSettings(Td *td, telegram_api::object_ptr<telegram_api::bots_accessSettings> &&settings);
 
+  explicit BotAccessSettings(td_api::object_ptr<td_api::botAccessSettings> &&settings);
+
   td_api::object_ptr<td_api::botAccessSettings> get_bot_access_settings_object(Td *td) const;
 
   bool is_restricted() const {

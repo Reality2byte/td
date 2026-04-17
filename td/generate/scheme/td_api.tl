@@ -14194,6 +14194,9 @@ getManagedBotToken bot_user_id:int53 revoke:Bool = Text;
 //@description Returns access settings of a managed bot; for bots only @bot_user_id Identifier of the managed bot
 getManagedBotAccessSettings bot_user_id:int53 = BotAccessSettings;
 
+//@description Sets access settings of a managed bot; for bots only @bot_user_id Identifier of the managed bot @settings New access settings
+setManagedBotAccessSettings bot_user_id:int53 settings:botAccessSettings = Ok;
+
 //@description Sets the name of a bot. Can be called only if userTypeBot.can_be_edited == true
 //@bot_user_id Identifier of the target bot
 //@language_code A two-letter ISO 639-1 language code. If empty, the name will be shown to all users for whose languages there is no dedicated name
