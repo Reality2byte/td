@@ -211,6 +211,7 @@ OptionManager::OptionManager(Td *td)
   set_default_integer_option("has_protected_content_disable_request_duration", is_test_dc ? 300 : 86400);
   set_default_integer_option("poll_open_period_max", 730 * 3600);
   set_default_integer_option("owned_bot_count_max", 20);
+  set_default_integer_option("text_composition_style_example_count", 7);
 
   if (options.isset("my_phone_number") || !options.isset("my_id")) {
     update_premium_options();
