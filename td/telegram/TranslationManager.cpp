@@ -212,6 +212,35 @@ class GetToneQuery final : public Td::ResultHandler {
   }
 };
 
+class GetToneExampleQuery final : public Td::ResultHandler {
+  Promise<td_api::object_ptr<td_api::textCompositionStyleExample>> promise_;
+
+ public:
+  explicit GetToneExampleQuery(Promise<td_api::object_ptr<td_api::textCompositionStyleExample>> &&promise)
+      : promise_(std::move(promise)) {
+  }
+
+  void send(telegram_api::object_ptr<telegram_api::InputAiComposeTone> &&input_tone, int32 num) {
+    send_query(G()->net_query_creator().create(telegram_api::aicompose_getToneExample(std::move(input_tone), num)));
+  }
+
+  void on_result(BufferSlice packet) final {
+    auto result_ptr = fetch_result<telegram_api::aicompose_getToneExample>(packet);
+    if (result_ptr.is_error()) {
+      return on_error(result_ptr.move_as_error());
+    }
+
+    auto ptr = result_ptr.move_as_ok();
+    LOG(INFO) << "Receive result for GetToneExampleQuery: " << to_string(ptr);
+    promise_.set_value(AiComposeToneExample(std::move(ptr)).get_text_composition_style_example_object());
+  }
+
+  void on_error(Status status) final {
+    LOG(INFO) << "Receive error for GetToneExampleQuery: " << status;
+    promise_.set_error(std::move(status));
+  }
+};
+
 class ComposeMessageWithAiQuery final : public Td::ResultHandler {
   Promise<td_api::object_ptr<td_api::formattedText>> promise_;
   bool skip_bot_commands_;
@@ -506,6 +535,12 @@ void TranslationManager::search_tone(const string &name,
                                      Promise<td_api::object_ptr<td_api::textCompositionStyle>> &&promise) {
   TRY_RESULT_PROMISE(promise, input_tone, ai_compose_tones_.get_input_ai_compose_tone(name));
   td_->create_handler<GetToneQuery>(std::move(promise))->send(std::move(input_tone));
+}
+
+void TranslationManager::get_tone_example(const string &name, int32 num,
+                                          Promise<td_api::object_ptr<td_api::textCompositionStyleExample>> &&promise) {
+  TRY_RESULT_PROMISE(promise, input_tone, ai_compose_tones_.get_input_ai_compose_tone(name));
+  td_->create_handler<GetToneExampleQuery>(std::move(promise))->send(std::move(input_tone), num);
 }
 
 void TranslationManager::send_update_text_composition_styles() const {

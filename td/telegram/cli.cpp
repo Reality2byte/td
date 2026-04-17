@@ -5004,6 +5004,11 @@ class CliClient final : public Actor {
       string name;
       get_args(args, name);
       send_request(td_api::make_object<td_api::searchTextCompositionStyle>(name));
+    } else if (op == "gtcse") {
+      string name;
+      int32 example_number;
+      get_args(args, name, example_number);
+      send_request(td_api::make_object<td_api::getTextCompositionStyleExample>(name, example_number));
     } else if (op == "tt" || op == "ttf" || op == "ttc" || op == "ttn") {
       string text;
       string to_language_code;

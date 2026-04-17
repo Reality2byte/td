@@ -11419,6 +11419,10 @@ editTextCompositionStyle name:string title:string custom_emoji_id:int64 prompt:s
 //@description Searched a custom text composition style by its name @name Name of the style
 searchTextCompositionStyle name:string = TextCompositionStyle;
 
+//@description Returns an example of usage of a custom text composition style
+//@name Name of the style
+//@example_number 0-based unique number of the requested example; must be non-negative and less than getOption("text_composition_style_example_count")
+getTextCompositionStyleExample name:string example_number:int32 = TextCompositionStyleExample;
 
 //@description Translates a text to the given language; must not be used in secret chats. If the current user is a Telegram Premium user, then text formatting is preserved
 //@text Text to translate
