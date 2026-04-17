@@ -6724,7 +6724,7 @@ void Requests::on_request(uint64 id, td_api::createBot &request) {
                                      request.via_link_, std::move(promise));
 }
 
-void Requests::on_request(uint64 id, const td_api::getBotToken &request) {
+void Requests::on_request(uint64 id, const td_api::getManagedBotToken &request) {
   CHECK_IS_BOT();
   CREATE_TEXT_REQUEST_PROMISE();
   td_->bot_info_manager_->get_bot_token(UserId(request.bot_user_id_), request.revoke_, std::move(promise));
