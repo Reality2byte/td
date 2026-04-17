@@ -168,6 +168,50 @@ class UpdateToneQuery final : public Td::ResultHandler {
   }
 };
 
+class GetToneQuery final : public Td::ResultHandler {
+  Promise<td_api::object_ptr<td_api::textCompositionStyle>> promise_;
+
+ public:
+  explicit GetToneQuery(Promise<td_api::object_ptr<td_api::textCompositionStyle>> &&promise)
+      : promise_(std::move(promise)) {
+  }
+
+  void send(telegram_api::object_ptr<telegram_api::InputAiComposeTone> &&input_tone) {
+    send_query(G()->net_query_creator().create(telegram_api::aicompose_getTone(std::move(input_tone))));
+  }
+
+  void on_result(BufferSlice packet) final {
+    auto result_ptr = fetch_result<telegram_api::aicompose_getTone>(packet);
+    if (result_ptr.is_error()) {
+      return on_error(result_ptr.move_as_error());
+    }
+
+    auto ptr = result_ptr.move_as_ok();
+    LOG(INFO) << "Receive result for GetToneQuery: " << to_string(ptr);
+    switch (ptr->get_id()) {
+      case telegram_api::aicompose_tonesNotModified::ID:
+        break;
+      case telegram_api::aicompose_tones::ID: {
+        auto update = AiComposeTones(td_, telegram_api::move_object_as<telegram_api::aicompose_tones>(ptr))
+                          .get_update_text_composition_styles_object(td_);
+        if (update->styles_.size() == 1u) {
+          return promise_.set_value(std::move(update->styles_[0]));
+        }
+        break;
+      }
+      default:
+        UNREACHABLE();
+    }
+    LOG(ERROR) << "Receive " << to_string(ptr);
+    promise_.set_value(nullptr);
+  }
+
+  void on_error(Status status) final {
+    LOG(INFO) << "Receive error for GetToneQuery: " << status;
+    promise_.set_error(std::move(status));
+  }
+};
+
 class ComposeMessageWithAiQuery final : public Td::ResultHandler {
   Promise<td_api::object_ptr<td_api::formattedText>> promise_;
   bool skip_bot_commands_;
@@ -456,6 +500,12 @@ void TranslationManager::do_update_tone(const string &name, const string &title,
   TRY_RESULT_PROMISE(promise, input_tone, ai_compose_tones_.get_input_ai_compose_tone(name));
   td_->create_handler<UpdateToneQuery>(std::move(promise))
       ->send(std::move(input_tone), title, custom_emoji_id, prompt, show_creator);
+}
+
+void TranslationManager::search_tone(const string &name,
+                                     Promise<td_api::object_ptr<td_api::textCompositionStyle>> &&promise) {
+  TRY_RESULT_PROMISE(promise, input_tone, ai_compose_tones_.get_input_ai_compose_tone(name));
+  td_->create_handler<GetToneQuery>(std::move(promise))->send(std::move(input_tone));
 }
 
 void TranslationManager::send_update_text_composition_styles() const {

@@ -5000,6 +5000,10 @@ class CliClient final : public Actor {
       get_args(args, name, title, custom_emoji_id, prompt);
       send_request(
           td_api::make_object<td_api::editTextCompositionStyle>(name, title, custom_emoji_id, prompt, op == "etcsp"));
+    } else if (op == "stcs") {
+      string name;
+      get_args(args, name);
+      send_request(td_api::make_object<td_api::searchTextCompositionStyle>(name));
     } else if (op == "tt" || op == "ttf" || op == "ttc" || op == "ttn") {
       string text;
       string to_language_code;

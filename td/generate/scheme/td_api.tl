@@ -11408,6 +11408,9 @@ createTextCompositionStyle title:string custom_emoji_id:int64 prompt:string show
 //@show_creator True, if the current user should be shown as the creator of the style
 editTextCompositionStyle name:string title:string custom_emoji_id:int64 prompt:string show_creator:Bool = TextCompositionStyle;
 
+//@description Searched a custom text composition style by its name @name Name of the style
+searchTextCompositionStyle name:string = TextCompositionStyle;
+
 
 //@description Translates a text to the given language; must not be used in secret chats. If the current user is a Telegram Premium user, then text formatting is preserved
 //@text Text to translate
