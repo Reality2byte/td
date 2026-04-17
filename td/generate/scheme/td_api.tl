@@ -4200,6 +4200,9 @@ linkPreviewTypeStoryAlbum photo_icon:photo video_icon:video = LinkPreviewType;
 //@description The link is a link to boost a supergroup chat @photo Photo of the chat; may be null
 linkPreviewTypeSupergroupBoost photo:chatPhoto = LinkPreviewType;
 
+//@description The link is a link to a text composition style @custom_emoji_id Identifier of the custom emoji corresponding to the style; 0 if none
+linkPreviewTypeTextCompositionStyle custom_emoji_id:int64 = LinkPreviewType;
+
 //@description The link is a link to a cloud theme. TDLib has no theme support yet @documents The list of files with theme description @settings Settings for the cloud theme; may be null if unknown
 linkPreviewTypeTheme documents:vector<document> settings:themeSettings = LinkPreviewType;
 
