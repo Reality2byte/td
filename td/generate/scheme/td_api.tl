@@ -14191,6 +14191,9 @@ createBot manager_bot_user_id:int53 name:string username:string via_link:Bool = 
 //@revoke Pass true to revoke the current token and create a new one
 getManagedBotToken bot_user_id:int53 revoke:Bool = Text;
 
+//@description Returns access settings of a managed bot; for bots only @bot_user_id Identifier of the managed bot
+getManagedBotAccessSettings bot_user_id:int53 = BotAccessSettings;
+
 //@description Sets the name of a bot. Can be called only if userTypeBot.can_be_edited == true
 //@bot_user_id Identifier of the target bot
 //@language_code A two-letter ISO 639-1 language code. If empty, the name will be shown to all users for whose languages there is no dedicated name
