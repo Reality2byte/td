@@ -36082,8 +36082,7 @@ Result<MessagesManager::InvoiceMessageInfo> MessagesManager::get_invoice_message
 
   InvoiceMessageInfo result;
   result.server_message_id_ = m->message_id.get_server_message_id();
-  result.star_count_ =
-      content_type != MessageContentType::PaidMedia ? 0 : get_message_content_star_count(m->content.get());
+  result.star_count_ = get_message_content_star_count(m->content.get());
   return std::move(result);
 }
 

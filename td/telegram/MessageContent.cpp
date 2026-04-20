@@ -11485,8 +11485,12 @@ unique_ptr<MessageContent> get_uploaded_message_content(
 }
 
 int64 get_message_content_star_count(const MessageContent *content) {
-  CHECK(content->get_type() == MessageContentType::PaidMedia);
-  return static_cast<const MessagePaidMedia *>(content)->star_count;
+  switch (content->get_type()) {
+    case MessageContentType::PaidMedia:
+      return static_cast<const MessagePaidMedia *>(content)->star_count;
+    default:
+      return 0;
+  }
 }
 
 int32 get_message_content_duration(const MessageContent *content, const Td *td) {
