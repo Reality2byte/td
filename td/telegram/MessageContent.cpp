@@ -5419,10 +5419,11 @@ static telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_in
   if (!can_message_content_have_input_media(td, content, false)) {
     return nullptr;
   }
+  auto content_type = content->get_type();
   if (media_pos >= 0) {
-    CHECK(content->get_type() == MessageContentType::PaidMedia);
+    CHECK(can_message_content_have_multiple_files(content_type));
   }
-  switch (content->get_type()) {
+  switch (content_type) {
     case MessageContentType::Animation: {
       const auto *m = static_cast<const MessageAnimation *>(content);
       return td->animations_manager_->get_input_media(m->file_id, std::move(input_file), std::move(input_thumbnail),
@@ -5724,7 +5725,7 @@ bool is_uploaded_input_media(telegram_api::object_ptr<telegram_api::InputMedia> 
 
 void delete_message_content_thumbnail(MessageContent *content, Td *td, int32 media_pos) {
   if (media_pos != -1) {
-    CHECK(content->get_type() == MessageContentType::PaidMedia);
+    CHECK(can_message_content_have_multiple_files(content->get_type()));
   }
   switch (content->get_type()) {
     case MessageContentType::Animation: {
@@ -6327,9 +6328,15 @@ int32 get_message_content_index_mask(const MessageContent *content, const Td *td
 }
 
 vector<unique_ptr<MessageContent>> get_individual_message_contents(const MessageContent *content) {
-  CHECK(content->get_type() == MessageContentType::PaidMedia);
-  const auto *m = static_cast<const MessagePaidMedia *>(content);
-  return transform(m->media, [](const MessageExtendedMedia &media) { return media.get_message_content(); });
+  switch (content->get_type()) {
+    case MessageContentType::PaidMedia: {
+      const auto *m = static_cast<const MessagePaidMedia *>(content);
+      return transform(m->media, [](const MessageExtendedMedia &media) { return media.get_message_content(); });
+    }
+    default:
+      UNREACHABLE();
+      return {};
+  }
 }
 
 StickerType get_message_content_sticker_type(const Td *td, const MessageContent *content) {
@@ -11460,21 +11467,28 @@ unique_ptr<MessageContent> get_uploaded_message_content(
     telegram_api::object_ptr<telegram_api::MessageMedia> &&media_ptr, DialogId owner_dialog_id, int32 message_date,
     const char *source) {
   if (media_pos >= 0) {
-    CHECK(old_content->get_type() == MessageContentType::PaidMedia);
-    auto paid_media = static_cast<const MessagePaidMedia *>(old_content);
-    CHECK(static_cast<size_t>(media_pos) < paid_media->media.size());
-    auto content = make_unique<MessagePaidMedia>(*paid_media);
-    auto media = MessageExtendedMedia(td, std::move(media_ptr), owner_dialog_id);
-    if (!media.has_input_media()) {
-      if (!media.is_unsupported()) {
-        LOG(ERROR) << "Receive invalid uploaded paid media";
+    auto old_content_type = old_content->get_type();
+    CHECK(can_message_content_have_multiple_files(old_content_type));
+    switch (old_content_type) {
+      case MessageContentType::PaidMedia: {
+        auto paid_media = static_cast<const MessagePaidMedia *>(old_content);
+        CHECK(static_cast<size_t>(media_pos) < paid_media->media.size());
+        auto content = make_unique<MessagePaidMedia>(*paid_media);
+        auto media = MessageExtendedMedia(td, std::move(media_ptr), owner_dialog_id);
+        if (!media.has_input_media()) {
+          if (!media.is_unsupported()) {
+            LOG(ERROR) << "Receive invalid uploaded paid media";
+          }
+        } else {
+          bool is_content_changed = false;
+          bool need_update = false;
+          content->media[media_pos].merge_files(td, media, owner_dialog_id, true, is_content_changed, need_update);
+        }
+        return std::move(content);
       }
-    } else {
-      bool is_content_changed = false;
-      bool need_update = false;
-      content->media[media_pos].merge_files(td, media, owner_dialog_id, true, is_content_changed, need_update);
+      default:
+        UNREACHABLE();
     }
-    return std::move(content);
   }
   auto caption = get_message_content_caption(old_content);
   auto has_spoiler = get_message_content_has_spoiler(old_content);
@@ -11651,7 +11665,8 @@ FileId get_message_content_any_file_id(const MessageContent *content) {
 }
 
 vector<FileId> get_message_content_any_file_ids(const MessageContent *content) {
-  if (content->get_type() == MessageContentType::PaidMedia) {
+  auto content_type = content->get_type();
+  if (content_type == MessageContentType::PaidMedia) {
     return transform(static_cast<const MessagePaidMedia *>(content)->media,
                      [](const MessageExtendedMedia &media) { return media.get_any_file_id(); });
   }
@@ -11742,7 +11757,8 @@ void update_message_content_file_id_remote(MessageContent *content, FileId file_
 }
 
 void update_message_content_file_id_remotes(MessageContent *content, const vector<FileId> &file_ids) {
-  if (content->get_type() == MessageContentType::PaidMedia) {
+  auto content_type = content->get_type();
+  if (content_type == MessageContentType::PaidMedia) {
     auto &media = static_cast<MessagePaidMedia *>(content)->media;
     if (file_ids.size() != media.size()) {
       return;
@@ -11792,7 +11808,8 @@ FileId get_message_content_thumbnail_file_id(const MessageContent *content, cons
 }
 
 vector<FileId> get_message_content_thumbnail_file_ids(const MessageContent *content, const Td *td) {
-  if (content->get_type() == MessageContentType::PaidMedia) {
+  auto content_type = content->get_type();
+  if (content_type == MessageContentType::PaidMedia) {
     return transform(static_cast<const MessagePaidMedia *>(content)->media,
                      [&](const MessageExtendedMedia &media) { return media.get_thumbnail_file_id(td); });
   }

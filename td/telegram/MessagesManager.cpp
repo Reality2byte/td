@@ -21059,9 +21059,9 @@ void MessagesManager::cancel_send_message_query(DialogId dialog_id, Message *m) 
   if (m->media_album_id != 0) {
     send_closure_later(actor_id(this), &MessagesManager::on_upload_message_media_finished, m->media_album_id, dialog_id,
                        m->message_id, -1, Status::OK());
-  } else if (m->content->get_type() == MessageContentType::PaidMedia) {
-    LOG(INFO) << "Remove paid media group send from " << MessageFullId{dialog_id, m->message_id};
-    pending_paid_media_group_sends_.erase({dialog_id, m->message_id});
+  } else if (can_message_content_have_multiple_files(m->content->get_type())) {
+    LOG(INFO) << "Remove group send from " << MessageFullId{dialog_id, m->message_id};
+    pending_internal_media_sends_.erase({dialog_id, m->message_id});
   }
 
   if (!m->message_id.is_scheduled() && G()->keep_media_order() && !m->is_copy) {
@@ -21788,18 +21788,17 @@ void MessagesManager::do_send_message(DialogId dialog_id, const Message *m, int3
     }
     auto input_media = get_message_content_input_media(content, td_, m->ttl, m->send_emoji,
                                                        td_->auth_manager_->is_bot() && bad_parts.empty());
-    if (input_media == nullptr || media_pos >= 0 || !bad_parts.empty() ||
-        content_type == MessageContentType::PaidMedia) {
-      if (content_type == MessageContentType::Game || content_type == MessageContentType::Poll ||
-          content_type == MessageContentType::Story) {
+    auto can_have_multiple_files = can_message_content_have_multiple_files(content_type);
+    if (input_media == nullptr || media_pos >= 0 || !bad_parts.empty() || can_have_multiple_files) {
+      if (content_type == MessageContentType::Game || content_type == MessageContentType::Story) {
         return;
       }
       CHECK(!file_upload_ids.empty());
-      if (content_type == MessageContentType::PaidMedia && bad_parts.empty()) {
+      if (can_have_multiple_files && bad_parts.empty()) {
         CHECK(!is_secret && !is_edit);
         CHECK(media_pos == -1);
-        LOG(INFO) << "Add paid media group send for " << MessageFullId{dialog_id, m->message_id};
-        auto &request = pending_paid_media_group_sends_[{dialog_id, m->message_id}];
+        LOG(INFO) << "Add group media send for " << MessageFullId{dialog_id, m->message_id};
+        auto &request = pending_internal_media_sends_[{dialog_id, m->message_id}];
         CHECK(request.is_finished.empty());
         request.is_finished.resize(file_upload_ids.size());
         request.results.resize(file_upload_ids.size());
@@ -21812,8 +21811,7 @@ void MessagesManager::do_send_message(DialogId dialog_id, const Message *m, int3
         CHECK(file_upload_id.is_valid());
 
         FileView file_view = td_->file_manager_->get_file_view(file_upload_id.get_file_id());
-        if (content_type == MessageContentType::PaidMedia && !file_view.has_full_remote_location() &&
-            file_view.has_url()) {
+        if (can_have_multiple_files && !file_view.has_full_remote_location() && file_view.has_url()) {
           do_send_media(dialog_id, m, static_cast<int32>(i), nullptr, nullptr);
           continue;
         }
@@ -21823,8 +21821,7 @@ void MessagesManager::do_send_message(DialogId dialog_id, const Message *m, int3
             being_uploaded_files_
                 .emplace(file_upload_id,
                          UploadedFileInfo{MessageFullId(dialog_id, m->message_id),
-                                          content_type == MessageContentType::PaidMedia ? static_cast<int32>(i) : -1,
-                                          m->edit_generation})
+                                          can_have_multiple_files ? static_cast<int32>(i) : -1, m->edit_generation})
                 .second;
         CHECK(is_inserted);
         // need to call resume_upload synchronously to make upload process consistent with being_uploaded_files_
@@ -22111,8 +22108,8 @@ void MessagesManager::on_upload_message_media_finished(int64 media_album_id, Dia
   if (media_pos >= 0) {
     CHECK(media_album_id == 0);
     LOG(INFO) << "Finished to upload media " << media_pos << " from " << message_id << " in " << dialog_id;
-    auto it = pending_paid_media_group_sends_.find({dialog_id, message_id});
-    if (it == pending_paid_media_group_sends_.end()) {
+    auto it = pending_internal_media_sends_.find({dialog_id, message_id});
+    if (it == pending_internal_media_sends_.end()) {
       LOG(INFO) << "The message doesn't need to be sent";
       // the message may be already sent or failed to be sent
       return;
@@ -22141,7 +22138,7 @@ void MessagesManager::on_upload_message_media_finished(int64 media_album_id, Dia
 
                                        auto m = result.move_as_ok();
                                        CHECK(m != nullptr);
-                                       do_send_paid_media_group(dialog_id, m->message_id);
+                                       do_send_internal_media_group(dialog_id, m->message_id);
                                      }));
     }
     return;
@@ -22325,13 +22322,13 @@ void MessagesManager::do_send_message_group(int64 media_album_id) {
                                                    paid_message_star_count);
 }
 
-void MessagesManager::do_send_paid_media_group(DialogId dialog_id, MessageId message_id) {
+void MessagesManager::do_send_internal_media_group(DialogId dialog_id, MessageId message_id) {
   if (G()->close_flag()) {
     return;
   }
 
-  auto it = pending_paid_media_group_sends_.find({dialog_id, message_id});
-  if (it == pending_paid_media_group_sends_.end()) {
+  auto it = pending_internal_media_sends_.find({dialog_id, message_id});
+  if (it == pending_internal_media_sends_.end()) {
     // the paid media may be already sent or failed to be sent
     return;
   }
@@ -22343,7 +22340,7 @@ void MessagesManager::do_send_paid_media_group(DialogId dialog_id, MessageId mes
 
   auto *m = get_message(d, message_id);
   CHECK(m != nullptr);
-  CHECK(m->content->get_type() == MessageContentType::PaidMedia);
+  CHECK(can_message_content_have_multiple_files(m->content->get_type()));
 
   auto random_id = begin_send_message(dialog_id, m);
 
@@ -22362,16 +22359,16 @@ void MessagesManager::do_send_paid_media_group(DialogId dialog_id, MessageId mes
   }
   if (!success) {
     if (status.is_ok()) {
-      status = Status::Error(400, "Group send failed");
+      status = Status::Error(400, "Message send failed");
     }
     on_send_message_fail(random_id, std::move(status));
-    CHECK(pending_paid_media_group_sends_.count({dialog_id, message_id}) == 0);
+    CHECK(pending_internal_media_sends_.count({dialog_id, message_id}) == 0);
     return;
   }
 
   auto input_media = get_message_content_input_media(m->content.get(), td_, m->ttl, m->send_emoji, true);
   CHECK(input_media != nullptr);
-  pending_paid_media_group_sends_.erase(it);
+  pending_internal_media_sends_.erase(it);
 
   LOG(INFO) << "Begin to send paid media group " << message_id << " to " << dialog_id;
 
@@ -27491,11 +27488,11 @@ void MessagesManager::on_send_message_file_error(int64 random_id, size_t pos, ve
   }
 
   int32 media_pos = -1;
-  if (m->content->get_type() == MessageContentType::PaidMedia) {
+  if (can_message_content_have_multiple_files(m->content->get_type())) {
     media_pos = static_cast<int32>(pos);
 
     LOG(INFO) << "Add paid media group send for " << message_full_id;
-    auto &request = pending_paid_media_group_sends_[message_full_id];
+    auto &request = pending_internal_media_sends_[message_full_id];
     CHECK(request.is_finished.empty());
     CHECK(static_cast<size_t>(media_pos) < m->file_upload_ids.size());
     request.is_finished.resize(m->file_upload_ids.size(), true);
@@ -29368,7 +29365,7 @@ void MessagesManager::on_send_dialog_action_timeout(DialogId dialog_id) {
   }
   CHECK(m->message_id.is_yet_unsent());
   if (is_message_forward(m) || m->is_copy || m->message_id.is_scheduled() || m->sender_dialog_id.is_valid() ||
-      m->content->get_type() == MessageContentType::PaidMedia ||
+      can_message_content_have_multiple_files(m->content->get_type()) ||
       td_->dialog_manager_->is_broadcast_channel(dialog_id)) {
     return;
   }

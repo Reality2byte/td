@@ -132,7 +132,7 @@ struct BusinessConnectionManager::PendingMessage {
 
   void init_file_upload_ids(Td *td) {
     CHECK(file_upload_id_ == FileUploadId());
-    if (content_->get_type() == MessageContentType::PaidMedia) {
+    if (can_message_content_have_multiple_files(content_->get_type())) {
       return;
     }
     auto file_id =
@@ -1272,37 +1272,35 @@ void BusinessConnectionManager::do_send_message(unique_ptr<PendingMessage> &&mes
         }));
   }
 
-  if (content_type == MessageContentType::PaidMedia) {
+  if (can_message_content_have_multiple_files(content_type)) {
     auto message_contents = get_individual_message_contents(content);
     auto request_id = ++current_media_group_send_request_id_;
     auto &request = media_group_send_requests_[request_id];
     request.upload_results_.resize(message_contents.size());
-    request.paid_media_promise_ = std::move(promise);
-    request.paid_media_message_ = std::move(message);
+    request.internal_media_promise_ = std::move(promise);
+    request.internal_media_message_ = std::move(message);
 
     for (size_t media_pos = 0; media_pos < message_contents.size(); media_pos++) {
       auto fake_message = make_unique<PendingMessage>();
-      fake_message->dialog_id_ = request.paid_media_message_->dialog_id_;
-      fake_message->business_connection_id_ = request.paid_media_message_->business_connection_id_;
+      fake_message->dialog_id_ = request.internal_media_message_->dialog_id_;
+      fake_message->business_connection_id_ = request.internal_media_message_->business_connection_id_;
       fake_message->content_ = std::move(message_contents[media_pos]);
       fake_message->init_file_upload_ids(td_);
       auto input_media = get_message_content_input_media(fake_message->content_.get(), td_, MessageSelfDestructType(),
                                                          string(), td_->auth_manager_->is_bot());
-      if (input_media != nullptr) {
+      if (input_media != nullptr || get_message_content_any_file_id(fake_message->content_.get()) == FileId()) {
         auto file_id = fake_message->file_upload_id_.get_file_id();
-        CHECK(file_id.is_valid());
-        FileView file_view = td_->file_manager_->get_file_view(file_id);
-        if (file_view.has_full_remote_location()) {
+        if (!file_id.is_valid() || td_->file_manager_->get_file_view(file_id).has_full_remote_location()) {
           UploadMediaResult result;
           result.message_ = std::move(fake_message);
           result.input_media_ = std::move(input_media);
-          on_upload_message_paid_media(request_id, media_pos, std::move(result));
+          on_upload_message_internal_media(request_id, media_pos, std::move(result));
           continue;
         }
       }
       upload_media(std::move(fake_message), PromiseCreator::lambda([actor_id = actor_id(this), request_id, media_pos](
                                                                        Result<UploadMediaResult> &&result) mutable {
-                     send_closure(actor_id, &BusinessConnectionManager::on_upload_message_paid_media, request_id,
+                     send_closure(actor_id, &BusinessConnectionManager::on_upload_message_internal_media, request_id,
                                   media_pos, std::move(result));
                    }));
     }
@@ -1621,7 +1619,7 @@ void BusinessConnectionManager::on_upload_message_album_media(int64 request_id, 
 
   auto upload_results = std::move(request.upload_results_);
   auto promise = std::move(request.promise_);
-  CHECK(request.paid_media_message_ == nullptr);
+  CHECK(request.internal_media_message_ == nullptr);
   media_group_send_requests_.erase(it);
 
   for (auto &r_upload_result : upload_results) {
@@ -1676,8 +1674,8 @@ void BusinessConnectionManager::process_sent_business_message_album(
   promise.set_value(std::move(messages));
 }
 
-void BusinessConnectionManager::on_upload_message_paid_media(int64 request_id, size_t media_pos,
-                                                             Result<UploadMediaResult> &&result) {
+void BusinessConnectionManager::on_upload_message_internal_media(int64 request_id, size_t media_pos,
+                                                                 Result<UploadMediaResult> &&result) {
   G()->ignore_result_if_closing(result);
   auto it = media_group_send_requests_.find(request_id);
   CHECK(it != media_group_send_requests_.end());
@@ -1692,8 +1690,8 @@ void BusinessConnectionManager::on_upload_message_paid_media(int64 request_id, s
   }
 
   auto upload_results = std::move(request.upload_results_);
-  auto message = std::move(request.paid_media_message_);
-  auto promise = std::move(request.paid_media_promise_);
+  auto message = std::move(request.internal_media_message_);
+  auto promise = std::move(request.internal_media_promise_);
   media_group_send_requests_.erase(it);
 
   CHECK(message != nullptr);
