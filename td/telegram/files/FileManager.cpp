@@ -4389,11 +4389,8 @@ vector<const telegram_api::InputMedia *> FileManager::get_poll_media(const teleg
   result.push_back(poll->attached_media_.get());
   result.push_back(poll->solution_media_.get());
   for (auto &answer : poll->poll_->answers_) {
-    if (answer->get_id() == telegram_api::inputPollAnswer::ID) {  // TODO CHECK
-      result.push_back(static_cast<const telegram_api::inputPollAnswer *>(answer.get())->media_.get());
-    } else {
-      result.push_back(nullptr);
-    }
+    CHECK(answer->get_id() == telegram_api::inputPollAnswer::ID);
+    result.push_back(static_cast<const telegram_api::inputPollAnswer *>(answer.get())->media_.get());
   }
   return result;
 }
