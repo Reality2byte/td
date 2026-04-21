@@ -7515,6 +7515,9 @@ premiumLimitTypeSimilarChatCount = PremiumLimitType;
 //@description The maximum number of owned bots
 premiumLimitTypeOwnedBotCount = PremiumLimitType;
 
+//@description The maximum number of added text composition styles
+premiumLimitTypeCustomTextCompositionStyleCount = PremiumLimitType;
+
 
 //@class PremiumFeature @description Describes a feature available to Premium users
 
