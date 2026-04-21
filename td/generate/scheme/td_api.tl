@@ -11427,6 +11427,10 @@ searchTextCompositionStyle name:string = TextCompositionStyle;
 //@example_number 0-based unique number of the requested example; must be non-negative and less than getOption("text_composition_style_example_count")
 getTextCompositionStyleExample name:string example_number:int32 = TextCompositionStyleExample;
 
+//@description Adds a custom text composition style to the list of used by the user styles. May return an error with a message "TONES_SAVED_TOO_MANY" if the maximum number of added custom styles has been reached
+//@name Name of the style
+addTextCompositionStyle name:string = Ok;
+
 //@description Translates a text to the given language; must not be used in secret chats. If the current user is a Telegram Premium user, then text formatting is preserved
 //@text Text to translate
 //@to_language_code Language code of the language to which the message is translated. Must be one of

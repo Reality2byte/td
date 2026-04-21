@@ -62,6 +62,8 @@ class TranslationManager final : public Actor {
   void get_tone_example(const string &name, int32 num,
                         Promise<td_api::object_ptr<td_api::textCompositionStyleExample>> &&promise);
 
+  void add_tone(const string &name, Promise<Unit> &&promise);
+
   void get_current_state(vector<td_api::object_ptr<td_api::Update>> &updates) const;
 
  private:

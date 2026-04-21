@@ -241,6 +241,32 @@ class GetToneExampleQuery final : public Td::ResultHandler {
   }
 };
 
+class SaveToneQuery final : public Td::ResultHandler {
+  Promise<Unit> promise_;
+
+ public:
+  explicit SaveToneQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
+  }
+
+  void send(telegram_api::object_ptr<telegram_api::InputAiComposeTone> &&input_tone, bool unsave) {
+    send_query(G()->net_query_creator().create(telegram_api::aicompose_saveTone(std::move(input_tone), unsave)));
+  }
+
+  void on_result(BufferSlice packet) final {
+    auto result_ptr = fetch_result<telegram_api::aicompose_saveTone>(packet);
+    if (result_ptr.is_error()) {
+      return on_error(result_ptr.move_as_error());
+    }
+
+    promise_.set_value(Unit());
+  }
+
+  void on_error(Status status) final {
+    LOG(INFO) << "Receive error for SaveToneQuery: " << status;
+    promise_.set_error(std::move(status));
+  }
+};
+
 class ComposeMessageWithAiQuery final : public Td::ResultHandler {
   Promise<td_api::object_ptr<td_api::formattedText>> promise_;
   bool skip_bot_commands_;
@@ -541,6 +567,11 @@ void TranslationManager::get_tone_example(const string &name, int32 num,
                                           Promise<td_api::object_ptr<td_api::textCompositionStyleExample>> &&promise) {
   TRY_RESULT_PROMISE(promise, input_tone, ai_compose_tones_.get_input_ai_compose_tone(name));
   td_->create_handler<GetToneExampleQuery>(std::move(promise))->send(std::move(input_tone), num);
+}
+
+void TranslationManager::add_tone(const string &name, Promise<Unit> &&promise) {
+  TRY_RESULT_PROMISE(promise, input_tone, ai_compose_tones_.get_input_ai_compose_tone(name));
+  td_->create_handler<SaveToneQuery>(std::move(promise))->send(std::move(input_tone), false);
 }
 
 void TranslationManager::send_update_text_composition_styles() const {
