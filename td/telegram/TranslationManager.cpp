@@ -132,7 +132,9 @@ class CreateToneQuery final : public Td::ResultHandler {
 
     auto ptr = result_ptr.move_as_ok();
     LOG(INFO) << "Receive result for CreateToneQuery: " << to_string(ptr);
-    promise_.set_value(AiComposeTone(std::move(ptr)).get_text_composition_style_object(td_));
+    td_->translation_manager_->reload_ai_compose_tones(PromiseCreator::lambda(
+        [promise = std::move(promise_), style = AiComposeTone(std::move(ptr)).get_text_composition_style_object(td_)](
+            Unit) mutable { promise.set_value(std::move(style)); }));
   }
 
   void on_error(Status status) final {
@@ -166,7 +168,9 @@ class UpdateToneQuery final : public Td::ResultHandler {
 
     auto ptr = result_ptr.move_as_ok();
     LOG(INFO) << "Receive result for UpdateToneQuery: " << to_string(ptr);
-    promise_.set_value(AiComposeTone(std::move(ptr)).get_text_composition_style_object(td_));
+    td_->translation_manager_->reload_ai_compose_tones(PromiseCreator::lambda(
+        [promise = std::move(promise_), style = AiComposeTone(std::move(ptr)).get_text_composition_style_object(td_)](
+            Unit) mutable { promise.set_value(std::move(style)); }));
   }
 
   void on_error(Status status) final {
@@ -265,7 +269,7 @@ class SaveToneQuery final : public Td::ResultHandler {
       return on_error(result_ptr.move_as_error());
     }
 
-    promise_.set_value(Unit());
+    td_->translation_manager_->reload_ai_compose_tones(std::move(promise_));
   }
 
   void on_error(Status status) final {
