@@ -263,7 +263,7 @@ class GetSavedMessageByDateQuery final : public Td::ResultHandler {
       auto message_date = MessagesManager::get_message_date(message);
       if (message_date != 0 && message_date <= date_) {
         auto message_full_id = td_->messages_manager_->on_get_message(dialog_id_, std::move(message), false, false,
-                                                                      false, "GetSavedMessageByDateQuery");
+                                                                      "GetSavedMessageByDateQuery");
         if (message_full_id != MessageFullId()) {
           // TODO check message topic_id
           return promise_.set_value(
@@ -1708,7 +1708,7 @@ void SavedMessagesManager::process_saved_messages_topics(
       }
       auto message_full_id = td_->messages_manager_->on_get_message(
           is_saved_messages ? td_->dialog_manager_->get_my_dialog_id() : dialog_id, std::move(it->second), false, false,
-          false, "on_get_saved_messages_topics");
+          "on_get_saved_messages_topics");
       message_id_to_message.erase(it);
 
       auto message_id = message_full_id.get_message_id();
@@ -2227,8 +2227,8 @@ void SavedMessagesManager::on_get_topic_history(DialogId dialog_id, uint32 gener
   bool have_next = false;
   for (auto &message : info.messages) {
     auto message_date = MessagesManager::get_message_date(message);
-    auto message_full_id = td_->messages_manager_->on_get_message(dialog_id, std::move(message), false, false, false,
-                                                                  "on_get_topic_history");
+    auto message_full_id =
+        td_->messages_manager_->on_get_message(dialog_id, std::move(message), false, false, "on_get_topic_history");
     auto message_id = message_full_id.get_message_id();
     if (message_id == MessageId()) {
       info.total_count--;

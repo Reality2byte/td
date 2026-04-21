@@ -190,7 +190,7 @@ class MessagesManager final : public Actor {
                                     const char *source);
 
   void on_get_messages(DialogId dialog_id, vector<telegram_api::object_ptr<telegram_api::Message>> &&messages,
-                       bool is_channel_message, bool is_scheduled, Promise<Unit> &&promise, const char *source);
+                       bool is_scheduled, Promise<Unit> &&promise, const char *source);
 
   void on_get_history(DialogId dialog_id, MessageId from_message_id, MessageId old_last_new_message_id, int32 offset,
                       int32 limit, bool from_the_end, vector<tl_object_ptr<telegram_api::Message>> &&messages,
@@ -222,7 +222,7 @@ class MessagesManager final : public Actor {
                                         vector<tl_object_ptr<telegram_api::Message>> &&messages, bool is_not_modified);
 
   MessageFullId on_get_message(DialogId dialog_id, telegram_api::object_ptr<telegram_api::Message> message_ptr,
-                               bool from_update, bool is_channel_message, bool is_scheduled, const char *source);
+                               bool from_update, bool is_scheduled, const char *source);
 
   void open_secret_message(SecretChatId secret_chat_id, int64 random_id, Promise<Unit> &&promise);
 
@@ -1690,8 +1690,7 @@ class MessagesManager final : public Actor {
                                                 bool is_scheduled, bool is_business_message, const char *source);
 
   static std::pair<DialogId, unique_ptr<Message>> create_message(Td *td, MessageInfo &&message_info,
-                                                                 bool is_channel_message, bool is_guest_message,
-                                                                 const char *source);
+                                                                 bool is_guest_message, const char *source);
 
   MessageId find_old_message_id(DialogId dialog_id, MessageId message_id) const;
 
@@ -1700,8 +1699,7 @@ class MessagesManager final : public Actor {
   void get_dialog_message_count_from_server(DialogId dialog_id, MessageTopic message_topic, MessageSearchFilter filter,
                                             Promise<int32> &&promise);
 
-  MessageFullId on_get_message(MessageInfo &&message_info, const bool from_update, const bool is_channel_message,
-                               const char *source);
+  MessageFullId on_get_message(MessageInfo &&message_info, const bool from_update, const char *source);
 
   Result<InputMessageContent> process_input_message_content(
       DialogId dialog_id, tl_object_ptr<td_api::InputMessageContent> &&input_message_content,
