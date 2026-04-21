@@ -322,6 +322,8 @@ class Requests {
 
   void on_request(uint64 id, td_api::editTextCompositionStyle &request);
 
+  void on_request(uint64 id, td_api::deleteTextCompositionStyle &request);
+
   void on_request(uint64 id, td_api::searchTextCompositionStyle &request);
 
   void on_request(uint64 id, td_api::getTextCompositionStyleExample &request);

@@ -2807,6 +2807,13 @@ void Requests::on_request(uint64 id, td_api::editTextCompositionStyle &request) 
                                          request.prompt_, request.show_creator_, std::move(promise));
 }
 
+void Requests::on_request(uint64 id, td_api::deleteTextCompositionStyle &request) {
+  CHECK_IS_USER();
+  CLEAN_INPUT_STRING(request.name_);
+  CREATE_OK_REQUEST_PROMISE();
+  td_->translation_manager_->delete_tone(request.name_, std::move(promise));
+}
+
 void Requests::on_request(uint64 id, td_api::searchTextCompositionStyle &request) {
   CHECK_IS_USER();
   CLEAN_INPUT_STRING(request.name_);

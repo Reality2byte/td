@@ -57,6 +57,8 @@ class TranslationManager final : public Actor {
   void update_tone(const string &name, const string &title, CustomEmojiId custom_emoji_id, const string &prompt,
                    bool show_creator, Promise<td_api::object_ptr<td_api::textCompositionStyle>> &&promise);
 
+  void delete_tone(const string &name, Promise<Unit> &&promise);
+
   void search_tone(const string &name, Promise<td_api::object_ptr<td_api::textCompositionStyle>> &&promise);
 
   void get_tone_example(const string &name, int32 num,
