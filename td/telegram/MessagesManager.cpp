@@ -1649,7 +1649,8 @@ class SendMediaQuery final : public Td::ResultHandler {
                      << ", file_references = " << cover_file_references_;
         }
       } else {
-        if (pos < file_upload_ids_.size() && pos < file_references_.size() && !was_uploaded_) {
+        if (pos < file_upload_ids_.size() && pos < file_references_.size() && !was_uploaded_ &&
+            file_upload_ids_[pos].is_valid()) {
           VLOG(file_references) << "Receive " << status << " for " << file_upload_ids_[pos];
           td_->file_manager_->delete_file_reference(file_upload_ids_[pos].get_file_id(), file_references_[pos]);
           td_->messages_manager_->on_send_message_file_error(random_id_, pos, {-1});
@@ -21720,13 +21721,16 @@ void MessagesManager::do_send_message(DialogId dialog_id, const Message *m, int3
     if (!is_secret) {
       for (size_t i = 0; i < thumbnail_file_ids.size(); i++) {
         FileView file_view = td_->file_manager_->get_file_view(file_ids[i]);
-        if (get_file_type_class(file_view.get_type()) == FileTypeClass::Photo) {
+        if (file_view.empty()) {
+          CHECK(thumbnail_file_ids[i] == FileId());
+        } else if (get_file_type_class(file_view.get_type()) == FileTypeClass::Photo) {
           thumbnail_file_ids[i] = FileId();
         }
       }
     }
-    auto file_upload_ids = transform(
-        file_ids, [](FileId file_id) { return FileUploadId(file_id, FileManager::get_internal_upload_id()); });
+    auto file_upload_ids = transform(file_ids, [](FileId file_id) {
+      return file_id.is_valid() ? FileUploadId(file_id, FileManager::get_internal_upload_id()) : FileUploadId();
+    });
     auto thumbnail_file_upload_ids = transform(thumbnail_file_ids, [](FileId file_id) {
       return file_id.is_valid() ? FileUploadId(file_id, FileManager::get_internal_upload_id()) : FileUploadId();
     });
@@ -21793,13 +21797,18 @@ void MessagesManager::do_send_message(DialogId dialog_id, const Message *m, int3
           continue;
         }
         auto file_upload_id = file_upload_ids[i];
-        CHECK(file_upload_id.is_valid());
-
         FileView file_view = td_->file_manager_->get_file_view(file_upload_id.get_file_id());
-        if (can_have_multiple_files && !file_view.has_full_remote_location() && file_view.has_url()) {
-          do_send_media(dialog_id, m, static_cast<int32>(i), nullptr, nullptr);
-          continue;
+        if (can_have_multiple_files) {
+          if (file_view.empty()) {
+            on_upload_message_media_finished(m->media_album_id, dialog_id, m->message_id, static_cast<int32>(i), Status::OK());
+            continue;
+          }
+          if (!file_view.has_full_remote_location() && file_view.has_url()) {
+            do_send_media(dialog_id, m, static_cast<int32>(i), nullptr, nullptr);
+            continue;
+          }
         }
+        CHECK(file_upload_id.is_valid());
 
         LOG(INFO) << "Ask to upload " << file_upload_id << " with bad parts " << bad_parts;
         bool is_inserted =
@@ -22314,7 +22323,7 @@ void MessagesManager::do_send_internal_media_group(DialogId dialog_id, MessageId
 
   auto it = pending_internal_media_sends_.find({dialog_id, message_id});
   if (it == pending_internal_media_sends_.end()) {
-    // the paid media may be already sent or failed to be sent
+    // the internal media may be already sent or failed to be sent
     return;
   }
 
@@ -22355,7 +22364,7 @@ void MessagesManager::do_send_internal_media_group(DialogId dialog_id, MessageId
   CHECK(input_media != nullptr);
   pending_internal_media_sends_.erase(it);
 
-  LOG(INFO) << "Begin to send paid media group " << message_id << " to " << dialog_id;
+  LOG(INFO) << "Begin to send internal media " << message_id << " to " << dialog_id;
 
   const FormattedText *caption = get_message_content_text(m->content.get());
   td_->create_handler<SendMediaQuery>()->send(
@@ -27476,7 +27485,7 @@ void MessagesManager::on_send_message_file_error(int64 random_id, size_t pos, ve
   if (can_message_content_have_multiple_files(m->content->get_type())) {
     media_pos = static_cast<int32>(pos);
 
-    LOG(INFO) << "Add paid media group send for " << message_full_id;
+    LOG(INFO) << "Add internal media send for " << message_full_id;
     auto &request = pending_internal_media_sends_[message_full_id];
     CHECK(request.is_finished.empty());
     CHECK(static_cast<size_t>(media_pos) < m->file_upload_ids.size());
@@ -27484,6 +27493,7 @@ void MessagesManager::on_send_message_file_error(int64 random_id, size_t pos, ve
     request.is_finished[media_pos] = false;
     request.finished_count = m->file_upload_ids.size() - 1;
     request.results.resize(m->file_upload_ids.size());
+    CHECK(m->file_upload_ids[media_pos].is_valid());
   } else {
     CHECK(pos == 0);
   }

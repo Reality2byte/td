@@ -5677,6 +5677,9 @@ telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_input_med
       auto file_ids = get_message_content_any_file_ids(content);
       CHECK(file_ids.size() == file_references.size());
       auto file_id = file_ids[i];
+      if (!file_id.is_valid()) {
+        continue;
+      }
       if (!force) {
         LOG(INFO) << "File " << file_id << " has invalid file reference";
         return nullptr;
