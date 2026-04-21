@@ -12384,7 +12384,7 @@ sendChatAction chat_id:int53 topic_id:MessageTopic business_connection_id:string
 //@chat_id Chat identifier
 //@forum_topic_id The forum topic identifier in which the message will be sent; pass 0 if none
 //@draft_id Unique identifier of the draft
-//@text Draft text of the message
+//@text Draft text of the message; pass null to show a "Thinking..." placeholder
 sendTextMessageDraft chat_id:int53 forum_topic_id:int32 draft_id:int64 text:formattedText = Ok;
 
 

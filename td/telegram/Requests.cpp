@@ -4735,7 +4735,7 @@ void Requests::on_request(uint64 id, td_api::sendTextMessageDraft &request) {
   DialogId dialog_id(request.chat_id_);
   TRY_RESULT_PROMISE(
       promise, text,
-      get_formatted_text(td_, dialog_id, std::move(request.text_), td_->auth_manager_->is_bot(), false, true, false));
+      get_formatted_text(td_, dialog_id, std::move(request.text_), td_->auth_manager_->is_bot(), true, true, false));
   MessageTopic message_topic;
   if (request.forum_topic_id_ != 0) {
     message_topic = MessageTopic::forum(dialog_id, ForumTopicId(request.forum_topic_id_));
