@@ -213,6 +213,7 @@ OptionManager::OptionManager(Td *td)
   set_default_integer_option("owned_bot_count_max", 20);
   set_default_integer_option("text_composition_style_example_count", 7);
   set_default_integer_option("text_composition_style_title_length_max", 12);
+  set_default_integer_option("text_composition_style_prompt_length_max", 1024);
 
   if (options.isset("my_phone_number") || !options.isset("my_id")) {
     update_premium_options();

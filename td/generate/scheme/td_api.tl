@@ -11407,7 +11407,7 @@ getMessageLinkInfo url:string = MessageLinkInfo;
 //@description Creates a custom text composition style
 //@title Title of the style; 1-getOption("text_composition_style_title_length_max") characters
 //@custom_emoji_id Identifier of the custom emoji corresponding to the style
-//@prompt Prompt that will be used for text composition; 1-512 characters
+//@prompt Prompt that will be used for text composition; 1-getOption("text_composition_style_prompt_length_max") characters
 //@show_creator True, if the current user should be shown as the creator of the style
 createTextCompositionStyle title:string custom_emoji_id:int64 prompt:string show_creator:Bool = TextCompositionStyle;
 
@@ -11415,7 +11415,7 @@ createTextCompositionStyle title:string custom_emoji_id:int64 prompt:string show
 //@name Name of the style
 //@title Title of the style; 1-getOption("text_composition_style_title_length_max") characters
 //@custom_emoji_id Identifier of the custom emoji corresponding to the style
-//@prompt Prompt that will be used for text composition; 1-512 characters
+//@prompt Prompt that will be used for text composition; 1-getOption("text_composition_style_prompt_length_max") characters
 //@show_creator True, if the current user should be shown as the creator of the style
 editTextCompositionStyle name:string title:string custom_emoji_id:int64 prompt:string show_creator:Bool = TextCompositionStyle;
 
