@@ -763,7 +763,7 @@ userTypeDeleted = UserType;
 //@inline_query_placeholder Placeholder for inline queries (displayed on the application input field)
 //@supports_username_queries True, if the bot can be queried by username from any non-secret chat
 //@need_location True, if the location of the user is expected to be sent with every inline query to this bot
-//@can_connect_to_business True, if the bot supports connection to Telegram Business accounts
+//@can_connect_to_business True, if the bot supports connection to user accounts for chat automation
 //@can_be_added_to_attachment_menu True, if the bot can be added to attachment or side menu
 //@active_user_count The number of recently active users of the bot
 userTypeBot can_be_edited:Bool can_join_groups:Bool can_read_all_group_messages:Bool has_main_web_app:Bool has_topics:Bool allows_users_to_create_topics:Bool can_manage_bots:Bool is_inline:Bool inline_query_placeholder:string supports_username_queries:Bool need_location:Bool can_connect_to_business:Bool can_be_added_to_attachment_menu:Bool active_user_count:int32 = UserType;
