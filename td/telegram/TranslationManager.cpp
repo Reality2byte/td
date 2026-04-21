@@ -83,7 +83,12 @@ class TranslateTextQuery final : public Td::ResultHandler {
 };
 
 class GetAiComposeTonesQuery final : public Td::ResultHandler {
+  Promise<Unit> promise_;
+
  public:
+  explicit GetAiComposeTonesQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
+  }
+
   void send(int64 hash) {
     send_query(G()->net_query_creator().create(telegram_api::aicompose_getTones(hash)));
   }
@@ -97,10 +102,12 @@ class GetAiComposeTonesQuery final : public Td::ResultHandler {
     auto ptr = result_ptr.move_as_ok();
     LOG(INFO) << "Receive result for GetAiComposeTonesQuery: " << to_string(ptr);
     td_->translation_manager_->on_get_ai_compose_tones(std::move(ptr));
+    promise_.set_value(Unit());
   }
 
   void on_error(Status status) final {
     LOG(INFO) << "Receive error for GetAiComposeTonesQuery: " << status;
+    promise_.set_value(Unit());  // ignore the error
   }
 };
 
@@ -374,7 +381,7 @@ void TranslationManager::start_up() {
     }
     send_update_text_composition_styles();
     if (ai_compose_tones_ == AiComposeTones()) {
-      reload_ai_compose_tones();
+      reload_ai_compose_tones(Auto());
     }
   }
 }
@@ -386,7 +393,7 @@ void TranslationManager::tear_down() {
 void TranslationManager::on_authorization_success() {
   if (!td_->auth_manager_->is_bot()) {
     send_update_text_composition_styles();
-    reload_ai_compose_tones();
+    reload_ai_compose_tones(Auto());
   }
 }
 
@@ -490,9 +497,9 @@ string TranslationManager::get_ai_compose_tones_key() {
   return "ai_compose_styles";
 }
 
-void TranslationManager::reload_ai_compose_tones() {
+void TranslationManager::reload_ai_compose_tones(Promise<Unit> &&promise) {
   if (td_->auth_manager_->is_authorized() && !td_->auth_manager_->is_bot()) {
-    td_->create_handler<GetAiComposeTonesQuery>()->send(ai_compose_tones_.get_hash());
+    td_->create_handler<GetAiComposeTonesQuery>(std::move(promise))->send(ai_compose_tones_.get_hash());
   }
 }
 
