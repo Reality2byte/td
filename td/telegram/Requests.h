@@ -328,6 +328,8 @@ class Requests {
 
   void on_request(uint64 id, td_api::addTextCompositionStyle &request);
 
+  void on_request(uint64 id, td_api::removeTextCompositionStyle &request);
+
   void on_request(uint64 id, td_api::translateText &request);
 
   void on_request(uint64 id, td_api::translateMessageText &request);

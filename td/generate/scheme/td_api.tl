@@ -11431,6 +11431,10 @@ getTextCompositionStyleExample name:string example_number:int32 = TextCompositio
 //@name Name of the style
 addTextCompositionStyle name:string = Ok;
 
+//@description Removes a custom text composition style from the list of used by the user styles
+//@name Name of the style
+removeTextCompositionStyle name:string = Ok;
+
 //@description Translates a text to the given language; must not be used in secret chats. If the current user is a Telegram Premium user, then text formatting is preserved
 //@text Text to translate
 //@to_language_code Language code of the language to which the message is translated. Must be one of

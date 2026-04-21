@@ -5013,6 +5013,10 @@ class CliClient final : public Actor {
       string name;
       get_args(args, name);
       send_request(td_api::make_object<td_api::addTextCompositionStyle>(name));
+    } else if (op == "rtcs") {
+      string name;
+      get_args(args, name);
+      send_request(td_api::make_object<td_api::removeTextCompositionStyle>(name));
     } else if (op == "tt" || op == "ttf" || op == "ttc" || op == "ttn") {
       string text;
       string to_language_code;

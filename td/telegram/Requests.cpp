@@ -2828,6 +2828,13 @@ void Requests::on_request(uint64 id, td_api::addTextCompositionStyle &request) {
   td_->translation_manager_->add_tone(request.name_, std::move(promise));
 }
 
+void Requests::on_request(uint64 id, td_api::removeTextCompositionStyle &request) {
+  CHECK_IS_USER();
+  CLEAN_INPUT_STRING(request.name_);
+  CREATE_OK_REQUEST_PROMISE();
+  td_->translation_manager_->remove_tone(request.name_, std::move(promise));
+}
+
 void Requests::on_request(uint64 id, td_api::translateText &request) {
   CHECK_IS_USER();
   CLEAN_INPUT_STRING(request.to_language_code_);

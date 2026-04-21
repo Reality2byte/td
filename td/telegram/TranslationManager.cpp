@@ -574,6 +574,11 @@ void TranslationManager::add_tone(const string &name, Promise<Unit> &&promise) {
   td_->create_handler<SaveToneQuery>(std::move(promise))->send(std::move(input_tone), false);
 }
 
+void TranslationManager::remove_tone(const string &name, Promise<Unit> &&promise) {
+  TRY_RESULT_PROMISE(promise, input_tone, ai_compose_tones_.get_input_ai_compose_tone(name));
+  td_->create_handler<SaveToneQuery>(std::move(promise))->send(std::move(input_tone), true);
+}
+
 void TranslationManager::send_update_text_composition_styles() const {
   send_closure(G()->td(), &Td::send_update, ai_compose_tones_.get_update_text_composition_styles_object(td_));
 }
