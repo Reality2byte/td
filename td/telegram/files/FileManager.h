@@ -582,6 +582,8 @@ class FileManager final : public Actor {
 
   vector<tl_object_ptr<telegram_api::InputDocument>> get_input_documents(const vector<FileId> &file_ids) const;
 
+  static bool extract_was_uploaded(const telegram_api::InputMedia *input_media);
+
   static bool extract_was_uploaded(const telegram_api::object_ptr<telegram_api::InputMedia> &input_media);
 
   static bool extract_was_thumbnail_uploaded(const telegram_api::object_ptr<telegram_api::InputMedia> &input_media);
@@ -971,6 +973,8 @@ class FileManager final : public Actor {
   FullRemoteFileLocation *get_remote(int32 key);
 
   FlatHashSet<FileId, FileIdHash> get_main_file_ids(const vector<FileId> &file_ids);
+
+  static vector<const telegram_api::InputMedia *> get_poll_media(const telegram_api::InputMedia *input_media);
 
   void hangup() final;
   void tear_down() final;
