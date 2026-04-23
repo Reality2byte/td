@@ -6,14 +6,17 @@
 //
 #include "td/telegram/PollOption.h"
 
+#include "td/telegram/AuthManager.h"
 #include "td/telegram/Dependencies.h"
 #include "td/telegram/MessageContent.h"
 #include "td/telegram/MessageCopyOptions.h"
 #include "td/telegram/MessageId.h"
 #include "td/telegram/MessageSender.h"
+#include "td/telegram/Td.h"
 
 #include "td/utils/algorithm.h"
 #include "td/utils/logging.h"
+#include "td/utils/utf8.h"
 
 namespace td {
 
@@ -49,6 +52,20 @@ PollOption::PollOption(Td *td, telegram_api::object_ptr<telegram_api::PollAnswer
       added_date_ = 0;
     }
   }
+}
+
+Result<PollOption> PollOption::get_poll_option(Td *td, DialogId dialog_id,
+                                               td_api::object_ptr<td_api::inputPollOption> &&input_poll_option) {
+  if (input_poll_option == nullptr) {
+    return Status::Error(400, "Poll option must be non-empty");
+  }
+  TRY_RESULT(text, get_formatted_text(td, dialog_id, std::move(input_poll_option->text_), td->auth_manager_->is_bot(),
+                                      false, true, false));
+  constexpr size_t MAX_POLL_OPTION_LENGTH = 100;  // server-side limit
+  if (utf8_length(text.text) > MAX_POLL_OPTION_LENGTH) {
+    return Status::Error(400, PSLICE() << "Poll options length must not exceed " << MAX_POLL_OPTION_LENGTH);
+  }
+  return PollOption(std::move(text), nullptr);
 }
 
 PollOption PollOption::dup_option(Td *td, DialogId dialog_id) const {

@@ -4892,7 +4892,6 @@ static Result<InputMessageContent> create_input_message_content(
     }
     case td_api::inputMessagePoll::ID: {
       const size_t MAX_POLL_QUESTION_LENGTH = is_bot ? 300 : 255;  // server-side limit
-      constexpr size_t MAX_POLL_OPTION_LENGTH = 100;               // server-side limit
       auto max_poll_options = td->option_manager_->get_option_integer("poll_answer_count_max");
       auto input_poll = static_cast<td_api::inputMessagePoll *>(input_message_content.get());
       TRY_RESULT(question,
@@ -4908,15 +4907,8 @@ static Result<InputMessageContent> create_input_message_content(
       }
       vector<PollOption> options;
       for (auto &input_option : input_poll->options_) {
-        if (input_option == nullptr) {
-          return Status::Error(400, "Poll option must be non-empty");
-        }
-        TRY_RESULT(option,
-                   get_formatted_text(td, dialog_id, std::move(input_option->text_), is_bot, false, true, false));
-        if (utf8_length(option.text) > MAX_POLL_OPTION_LENGTH) {
-          return Status::Error(400, PSLICE() << "Poll options length must not exceed " << MAX_POLL_OPTION_LENGTH);
-        }
-        options.emplace_back(std::move(option), nullptr);
+        TRY_RESULT(option, PollOption::get_poll_option(td, dialog_id, std::move(input_option)));
+        options.push_back(std::move(option));
       }
 
       bool is_quiz = false;
