@@ -5481,7 +5481,26 @@ static telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_in
     }
     case MessageContentType::Poll: {
       const auto *m = static_cast<const MessagePoll *>(content);
-      return td->poll_manager_->get_input_media(m->poll_id);
+      auto message_contents = get_individual_message_contents(td, content);
+      if (media_pos >= 0) {
+        CHECK(static_cast<size_t>(media_pos) < message_contents.size());
+        return get_message_content_input_media_impl(message_contents[media_pos].get(), -1, td, std::move(input_file),
+                                                    std::move(input_thumbnail), ttl, emoji);
+      }
+      CHECK(input_file == nullptr && input_thumbnail == nullptr);
+      vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_media;
+      for (auto &message_content : message_contents) {
+        if (message_content->get_type() == MessageContentType::Text) {
+          input_media.push_back(nullptr);
+          continue;
+        }
+        auto media = get_message_content_input_media_impl(message_content.get(), -1, td, nullptr, nullptr, ttl, emoji);
+        if (media == nullptr) {
+          return nullptr;
+        }
+        input_media.push_back(std::move(media));
+      }
+      return td->poll_manager_->get_input_media(m->poll_id, std::move(input_media));
     }
     case MessageContentType::Sticker: {
       const auto *m = static_cast<const MessageSticker *>(content);

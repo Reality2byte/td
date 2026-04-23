@@ -67,7 +67,8 @@ struct PollOption {
 
   td_api::object_ptr<td_api::pollOption> get_poll_option_object(Td *td) const;
 
-  telegram_api::object_ptr<telegram_api::PollAnswer> get_input_poll_answer() const;
+  telegram_api::object_ptr<telegram_api::PollAnswer> get_input_poll_answer(
+      telegram_api::object_ptr<telegram_api::InputMedia> &&input_media) const;
 
   static vector<PollOption> get_poll_options(Td *td,
                                              vector<telegram_api::object_ptr<telegram_api::PollAnswer>> &&poll_answers,

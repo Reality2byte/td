@@ -1896,9 +1896,11 @@ bool PollManager::has_input_media(PollId poll_id) const {
   return true;
 }
 
-telegram_api::object_ptr<telegram_api::InputMedia> PollManager::get_input_media(PollId poll_id) const {
+telegram_api::object_ptr<telegram_api::InputMedia> PollManager::get_input_media(
+    PollId poll_id, vector<telegram_api::object_ptr<telegram_api::InputMedia>> &&input_media) const {
   auto poll = get_poll(poll_id);
   CHECK(poll != nullptr);
+  CHECK(input_media.size() == 2 + poll->options_.size());
 
   int32 poll_flags = 0;
   if (poll->open_period_ != 0) {
@@ -1925,7 +1927,16 @@ telegram_api::object_ptr<telegram_api::InputMedia> PollManager::get_input_media(
     if (!poll->explanation_.text.empty()) {
       flags |= telegram_api::inputMediaPoll::SOLUTION_MASK;
     }
-    // TODO poll->explanation_media
+    if (input_media[1] != nullptr) {
+      flags |= telegram_api::inputMediaPoll::SOLUTION_MEDIA_MASK;
+    }
+  }
+  if (input_media[0] != nullptr) {
+    flags |= telegram_api::inputMediaPoll::ATTACHED_MEDIA_MASK;
+  }
+  vector<telegram_api::object_ptr<telegram_api::PollAnswer>> answers;
+  for (size_t i = 0; i < poll->options_.size(); i++) {
+    answers.push_back(poll->options_[i].get_input_poll_answer(std::move(input_media[2 + i])));
   }
   return telegram_api::make_object<telegram_api::inputMediaPoll>(
       flags,
@@ -1933,12 +1944,11 @@ telegram_api::object_ptr<telegram_api::InputMedia> PollManager::get_input_media(
           0, poll_flags, poll->is_closed_, !poll->is_anonymous_, poll->allow_multiple_answers_, poll->is_quiz_,
           poll->has_open_answers_, poll->has_revoting_disabled_, poll->shuffle_answers_,
           poll->hide_results_until_close_, true, poll->subscribers_only_,
-          get_input_text_with_entities(nullptr, poll->question_, "get_input_media_poll"),
-          transform(poll->options_, [](const PollOption &poll_option) { return poll_option.get_input_poll_answer(); }),
+          get_input_text_with_entities(nullptr, poll->question_, "get_input_media_poll"), std::move(answers),
           poll->open_period_, poll->close_date_, std::move(country_codes), 0),
-      std::move(correct_answers), nullptr, poll->explanation_.text,
+      std::move(correct_answers), std::move(input_media[0]), poll->explanation_.text,
       get_input_message_entities(td_->user_manager_.get(), poll->explanation_.entities, "get_input_media_poll"),
-      nullptr);
+      std::move(input_media[1]));
 }
 
 PollId PollManager::on_get_poll(PollId poll_id, tl_object_ptr<telegram_api::poll> &&poll_server,
