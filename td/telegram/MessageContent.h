@@ -105,6 +105,8 @@ InlineMessageContent create_inline_message_content(Td *td, FileId file_id,
                                                    tl_object_ptr<telegram_api::BotInlineMessage> &&bot_inline_message,
                                                    int32 allowed_media_content_id, Photo *photo, Game *game);
 
+unique_ptr<MessageContent> create_empty_text_message_content();
+
 unique_ptr<MessageContent> create_text_message_content(string text, vector<MessageEntity> entities,
                                                        WebPageId web_page_id, bool force_small_media,
                                                        bool force_large_media, bool skip_confitmation,
@@ -166,7 +168,7 @@ bool update_opened_message_content(MessageContent *content);
 
 int32 get_message_content_index_mask(const MessageContent *content, const Td *td, bool is_outgoing);
 
-vector<unique_ptr<MessageContent>> get_individual_message_contents(const MessageContent *content);
+vector<unique_ptr<MessageContent>> get_individual_message_contents(const Td *td, const MessageContent *content);
 
 StickerType get_message_content_sticker_type(const Td *td, const MessageContent *content);
 

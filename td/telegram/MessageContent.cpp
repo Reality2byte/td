@@ -4522,6 +4522,10 @@ InlineMessageContent create_inline_message_content(Td *td, FileId file_id,
   return result;
 }
 
+unique_ptr<MessageContent> create_empty_text_message_content() {
+  return td::make_unique<MessageText>();
+}
+
 unique_ptr<MessageContent> create_text_message_content(string text, vector<MessageEntity> entities,
                                                        WebPageId web_page_id, bool force_small_media,
                                                        bool force_large_media, bool skip_confirmation,
@@ -5121,6 +5125,7 @@ Status check_message_group_message_contents(const vector<InputMessageContent> &m
 }
 
 bool can_message_content_have_input_media(const Td *td, const MessageContent *content, bool is_server) {
+  CHECK(content != nullptr);
   switch (content->get_type()) {
     case MessageContentType::Game:
       return is_server || static_cast<const MessageGame *>(content)->game.has_input_media();
@@ -6311,11 +6316,15 @@ int32 get_message_content_index_mask(const MessageContent *content, const Td *td
   return get_message_content_text_index_mask(content) | get_message_content_media_index_mask(content, td, is_outgoing);
 }
 
-vector<unique_ptr<MessageContent>> get_individual_message_contents(const MessageContent *content) {
+vector<unique_ptr<MessageContent>> get_individual_message_contents(const Td *td, const MessageContent *content) {
   switch (content->get_type()) {
     case MessageContentType::PaidMedia: {
       const auto *m = static_cast<const MessagePaidMedia *>(content);
       return transform(m->media, [](const MessageExtendedMedia &media) { return media.get_message_content(); });
+    }
+    case MessageContentType::Poll: {
+      const auto *m = static_cast<const MessagePoll *>(content);
+      return td->poll_manager_->get_individual_message_contents(m->poll_id, m->attached_media.get());
     }
     default:
       UNREACHABLE();

@@ -1273,7 +1273,7 @@ void BusinessConnectionManager::do_send_message(unique_ptr<PendingMessage> &&mes
   }
 
   if (can_message_content_have_multiple_files(content_type)) {
-    auto message_contents = get_individual_message_contents(content);
+    auto message_contents = get_individual_message_contents(td_, content);
     auto request_id = ++current_media_group_send_request_id_;
     auto &request = media_group_send_requests_[request_id];
     request.upload_results_.resize(message_contents.size());

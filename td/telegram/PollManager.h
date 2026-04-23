@@ -107,11 +107,14 @@ class PollManager final : public Actor {
 
   void stop_local_poll(PollId poll_id);
 
+  vector<unique_ptr<MessageContent>> get_individual_message_contents(PollId poll_id,
+                                                                     const MessageContent *attached_media) const;
+
   PollId dup_poll(DialogId dialog_id, PollId poll_id);
 
   bool has_input_media(PollId poll_id) const;
 
-  tl_object_ptr<telegram_api::InputMedia> get_input_media(PollId poll_id) const;
+  telegram_api::object_ptr<telegram_api::InputMedia> get_input_media(PollId poll_id) const;
 
   PollId on_get_poll(PollId poll_id, tl_object_ptr<telegram_api::poll> &&poll_server,
                      tl_object_ptr<telegram_api::pollResults> &&poll_results, const char *source);
