@@ -1288,8 +1288,8 @@ void BusinessConnectionManager::do_send_message(unique_ptr<PendingMessage> &&mes
       fake_message->init_file_upload_ids(td_);
       auto input_media = get_message_content_input_media(fake_message->content_.get(), td_, MessageSelfDestructType(),
                                                          string(), td_->auth_manager_->is_bot());
-      if (input_media != nullptr || get_message_content_any_file_id(fake_message->content_.get()) == FileId()) {
-        auto file_id = fake_message->file_upload_id_.get_file_id();
+      auto file_id = fake_message->file_upload_id_.get_file_id();
+      if (input_media != nullptr || !file_id.is_valid()) {
         if (!file_id.is_valid() || td_->file_manager_->get_file_view(file_id).has_full_remote_location()) {
           UploadMediaResult result;
           result.message_ = std::move(fake_message);
@@ -1706,7 +1706,7 @@ void BusinessConnectionManager::on_upload_message_internal_media(int64 request_i
     input_media.push_back(std::move(upload_result.input_media_));
   }
   td_->create_handler<SendBusinessMediaQuery>(std::move(promise))
-      ->send(std::move(message), get_message_content_input_media(message->content_.get(), std::move(input_media)));
+      ->send(std::move(message), get_message_content_input_media(message->content_.get(), td_, std::move(input_media)));
 }
 
 void BusinessConnectionManager::on_fail_send_message(unique_ptr<PendingMessage> &&message, const Status &error) {

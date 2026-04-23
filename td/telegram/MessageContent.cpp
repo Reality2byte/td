@@ -5472,7 +5472,7 @@ static telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_in
         }
         input_media.push_back(std::move(media));
       }
-      return get_message_content_input_media(content, std::move(input_media));
+      return get_message_content_input_media(content, td, std::move(input_media));
     }
     case MessageContentType::Photo: {
       const auto *m = static_cast<const MessagePhoto *>(content);
@@ -5615,7 +5615,7 @@ static telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_in
 }
 
 telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_input_media(
-    const MessageContent *content, vector<telegram_api::object_ptr<telegram_api::InputMedia>> &&input_media) {
+    const MessageContent *content, Td *td, vector<telegram_api::object_ptr<telegram_api::InputMedia>> &&input_media) {
   switch (content->get_type()) {
     case MessageContentType::PaidMedia: {
       const auto *m = static_cast<const MessagePaidMedia *>(content);
@@ -5625,6 +5625,10 @@ telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_input_med
       }
       return telegram_api::make_object<telegram_api::inputMediaPaidMedia>(flags, m->star_count, std::move(input_media),
                                                                           m->payload);
+    }
+    case MessageContentType::Poll: {
+      const auto *m = static_cast<const MessagePoll *>(content);
+      return td->poll_manager_->get_input_media(m->poll_id, std::move(input_media));
     }
     default:
       UNREACHABLE();

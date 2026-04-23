@@ -139,7 +139,7 @@ SecretInputMedia get_message_content_secret_input_media(
     BufferSlice thumbnail, int32 layer);
 
 telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_input_media(
-    const MessageContent *content, vector<telegram_api::object_ptr<telegram_api::InputMedia>> &&input_media);
+    const MessageContent *content, Td *td, vector<telegram_api::object_ptr<telegram_api::InputMedia>> &&input_media);
 
 telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_input_media(
     const MessageContent *content, int32 media_pos, Td *td,
