@@ -46,6 +46,9 @@ struct PollOption {
   static Result<PollOption> get_poll_option(Td *td, DialogId dialog_id,
                                             td_api::object_ptr<td_api::inputPollOption> &&input_poll_option);
 
+  static Result<vector<PollOption>> get_poll_options(
+      Td *td, DialogId dialog_id, vector<td_api::object_ptr<td_api::inputPollOption>> &&input_poll_options);
+
   const string &get_data() const {
     return data_;
   }

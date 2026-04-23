@@ -12,10 +12,12 @@
 #include "td/telegram/MessageCopyOptions.h"
 #include "td/telegram/MessageId.h"
 #include "td/telegram/MessageSender.h"
+#include "td/telegram/OptionManager.h"
 #include "td/telegram/Td.h"
 
 #include "td/utils/algorithm.h"
 #include "td/utils/logging.h"
+#include "td/utils/SliceBuilder.h"
 #include "td/utils/utf8.h"
 
 namespace td {
@@ -66,6 +68,23 @@ Result<PollOption> PollOption::get_poll_option(Td *td, DialogId dialog_id,
     return Status::Error(400, PSLICE() << "Poll options length must not exceed " << MAX_POLL_OPTION_LENGTH);
   }
   return PollOption(std::move(text), nullptr);
+}
+
+Result<vector<PollOption>> PollOption::get_poll_options(
+    Td *td, DialogId dialog_id, vector<td_api::object_ptr<td_api::inputPollOption>> &&input_poll_options) {
+  if (input_poll_options.empty()) {
+    return Status::Error(400, "Poll must have at least one answer option");
+  }
+  auto max_poll_options = td->option_manager_->get_option_integer("poll_answer_count_max", 12);
+  if (static_cast<int64>(input_poll_options.size()) > max_poll_options) {
+    return Status::Error(400, PSLICE() << "Poll can't have more than " << max_poll_options << " options");
+  }
+  vector<PollOption> options;
+  for (auto &input_option : input_poll_options) {
+    TRY_RESULT(option, get_poll_option(td, dialog_id, std::move(input_option)));
+    options.push_back(std::move(option));
+  }
+  return std::move(options);
 }
 
 PollOption PollOption::dup_option(Td *td, DialogId dialog_id) const {
