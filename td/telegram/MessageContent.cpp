@@ -4906,7 +4906,7 @@ static Result<InputMessageContent> create_input_message_content(
       if (static_cast<int64>(input_poll->options_.size()) > max_poll_options) {
         return Status::Error(400, PSLICE() << "Poll can't have more than " << max_poll_options << " options");
       }
-      vector<FormattedText> options;
+      vector<PollOption> options;
       for (auto &input_option : input_poll->options_) {
         if (input_option == nullptr) {
           return Status::Error(400, "Poll option must be non-empty");
@@ -4916,7 +4916,7 @@ static Result<InputMessageContent> create_input_message_content(
         if (utf8_length(option.text) > MAX_POLL_OPTION_LENGTH) {
           return Status::Error(400, PSLICE() << "Poll options length must not exceed " << MAX_POLL_OPTION_LENGTH);
         }
-        options.push_back(std::move(option));
+        options.emplace_back(std::move(option), nullptr);
       }
 
       bool is_quiz = false;

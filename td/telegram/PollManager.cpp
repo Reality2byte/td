@@ -832,7 +832,7 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
       poll->is_closed_, get_poll_vote_restriction_reason_object(poll_id, poll, dialog_id, message_id));
 }
 
-PollId PollManager::create_poll(FormattedText &&question, vector<FormattedText> &&options, bool is_anonymous,
+PollId PollManager::create_poll(FormattedText &&question, vector<PollOption> &&options, bool is_anonymous,
                                 bool allow_multiple_answers, bool has_open_answers, bool has_revoting_disabled,
                                 bool subscribers_only, vector<string> &&country_codes, bool shuffle_answers,
                                 bool hide_results_until_close, bool is_quiz, vector<int32> correct_option_ids,
@@ -845,9 +845,7 @@ PollId PollManager::create_poll(FormattedText &&question, vector<FormattedText> 
   keep_only_custom_emoji(question);
   auto poll = make_unique<Poll>();
   poll->question_ = std::move(question);
-  for (auto &option_text : options) {
-    poll->options_.emplace_back(std::move(option_text), nullptr);
-  }
+  poll->options_ = std::move(options);
   poll->is_anonymous_ = is_anonymous;
   poll->allow_multiple_answers_ = allow_multiple_answers;
   poll->has_open_answers_ = has_open_answers;
@@ -1861,10 +1859,8 @@ PollId PollManager::dup_poll(DialogId dialog_id, PollId poll_id) {
 
   auto question = poll->question_;
   remove_unallowed_entities(td_, question, dialog_id);
-  auto options = transform(poll->options_, [](auto &option) { return option.text_; });
-  for (auto &option : options) {
-    remove_unallowed_entities(td_, option, dialog_id);
-  }
+  auto options =
+      transform(poll->options_, [td = td_, dialog_id](const auto &option) { return option.dup_option(td, dialog_id); });
   auto explanation = poll->explanation_;
   remove_unallowed_entities(td_, explanation, dialog_id);
   unique_ptr<MessageContent> explanation_media;
