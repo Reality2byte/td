@@ -3735,6 +3735,13 @@ class CliClient final : public Actor {
       get_args(args, chat_id, sender_id);
       send_request(td_api::make_object<td_api::deleteAllRecentMessageReactionsFromSender>(
           chat_id, as_message_sender(sender_id)));
+    } else if (op == "dmrfs") {
+      ChatId chat_id;
+      MessageId message_id;
+      string sender_id;
+      get_args(args, chat_id, message_id, sender_id);
+      send_request(td_api::make_object<td_api::deleteMessageReactionsFromSender>(chat_id, message_id,
+                                                                                 as_message_sender(sender_id)));
     } else if (op == "reactbot" || op == "reactbotbig") {
       ChatId chat_id;
       MessageId message_id;

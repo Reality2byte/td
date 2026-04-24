@@ -582,6 +582,8 @@ class Requests {
 
   void on_request(uint64 id, const td_api::deleteAllRecentMessageReactionsFromSender &request);
 
+  void on_request(uint64 id, const td_api::deleteMessageReactionsFromSender &request);
+
   void on_request(uint64 id, const td_api::setMessageReactions &request);
 
   void on_request(uint64 id, td_api::getMessageAddedReactions &request);
