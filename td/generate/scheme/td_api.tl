@@ -6805,6 +6805,9 @@ reactionUnavailabilityReasonAnonymousAdministrator = ReactionUnavailabilityReaso
 //@description The user isn't a member of the supergroup and can't send messages and reactions there without joining
 reactionUnavailabilityReasonGuest = ReactionUnavailabilityReason;
 
+//@description The user is restricted in the chat
+reactionUnavailabilityReasonRestricted = ReactionUnavailabilityReason;
+
 
 //@description Represents a list of animations @animations List of animations
 animations animations:vector<animation> = Animations;

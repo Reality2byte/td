@@ -19894,6 +19894,12 @@ ChatReactions MessagesManager::get_message_available_reactions(const Dialog *d, 
       can_use_reactions = false;
     }
   }
+  if (can_use_reactions && !td_->dialog_manager_->get_dialog_permissions(d->dialog_id).can_send_reactions()) {
+    if (unavailability_reason != nullptr) {
+      *unavailability_reason = ReactionUnavailabilityReason::Restricted;
+    }
+    can_use_reactions = false;
+  }
 
   int64 reactions_uniq_max = td_->option_manager_->get_option_integer("reactions_uniq_max", 11);
   if (0 < active_reactions.reactions_limit_ && active_reactions.reactions_limit_ < reactions_uniq_max) {
