@@ -1481,19 +1481,10 @@ void BusinessConnectionManager::complete_upload_media(unique_ptr<PendingMessage>
   bool need_update = false;
 
   unique_ptr<MessageContent> &old_content = message->content_;
-  auto old_content_type = old_content->get_type();
-  auto new_content_type = new_content->get_type();
-
   auto old_file_id = message->file_upload_id_.get_file_id();
-  if (old_content_type != new_content_type) {
-    need_update = true;
-
-    td_->file_manager_->try_merge_documents(get_message_content_any_file_id(new_content.get()), old_file_id);
-  } else {
-    merge_message_contents(td_, old_content.get(), new_content.get(), false, DialogId(), true, is_content_changed,
-                           need_update);
-    compare_message_contents(td_, old_content.get(), new_content.get(), is_content_changed, need_update);
-  }
+  merge_and_compare_message_contents(td_, old_content.get(), new_content.get(), false, DialogId(), true,
+                                     {message->file_upload_id_}, MessageSelfDestructType(), 0.0, nullptr,
+                                     is_content_changed, need_update);
   send_closure_later(G()->file_manager(), &FileManager::cancel_upload, message->file_upload_id_);
   message->file_upload_id_ = {};
 
