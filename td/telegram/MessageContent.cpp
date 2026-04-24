@@ -8304,6 +8304,56 @@ void compare_message_contents(Td *td, const MessageContent *old_content, const M
   }
 }
 
+static void update_message_content_file_id_remote(MessageContent *content, FileId file_id) {
+  if (file_id.get_remote() == 0) {
+    return;
+  }
+  FileId *old_file_id = [&] {
+    switch (content->get_type()) {
+      case MessageContentType::Animation:
+        return &static_cast<MessageAnimation *>(content)->file_id;
+      case MessageContentType::Audio:
+        return &static_cast<MessageAudio *>(content)->file_id;
+      case MessageContentType::Document:
+        return &static_cast<MessageDocument *>(content)->file_id;
+      case MessageContentType::Sticker:
+        return &static_cast<MessageSticker *>(content)->file_id;
+      case MessageContentType::Video:
+        return &static_cast<MessageVideo *>(content)->file_id;
+      case MessageContentType::VideoNote:
+        return &static_cast<MessageVideoNote *>(content)->file_id;
+      case MessageContentType::VoiceNote:
+        return &static_cast<MessageVoiceNote *>(content)->file_id;
+      case MessageContentType::PaidMedia:
+        UNREACHABLE();
+        return static_cast<FileId *>(nullptr);
+      default:
+        return static_cast<FileId *>(nullptr);
+    }
+  }();
+  if (old_file_id != nullptr && *old_file_id == file_id && old_file_id->get_remote() == 0) {
+    *old_file_id = file_id;
+  }
+}
+
+static void update_message_content_file_id_remotes(MessageContent *content, const vector<FileId> &file_ids) {
+  auto content_type = content->get_type();
+  if (content_type == MessageContentType::PaidMedia) {
+    auto &media = static_cast<MessagePaidMedia *>(content)->media;
+    if (file_ids.size() != media.size()) {
+      return;
+    }
+    for (size_t i = 0; i < file_ids.size(); i++) {
+      media[i].update_file_id_remote(file_ids[i]);
+    }
+    return;
+  }
+  if (file_ids.size() != 1) {
+    return;
+  }
+  update_message_content_file_id_remote(content, file_ids[0]);
+}
+
 void merge_and_compare_message_contents(Td *td, MessageContent *old_content, MessageContent *new_content,
                                         bool need_message_changed_warning, DialogId dialog_id, bool need_merge_files,
                                         const vector<FileUploadId> &old_file_upload_ids, MessageSelfDestructType ttl,
@@ -11780,56 +11830,6 @@ vector<FileId> get_message_content_cover_any_file_ids(const MessageContent *cont
       break;
   }
   return {};
-}
-
-void update_message_content_file_id_remote(MessageContent *content, FileId file_id) {
-  if (file_id.get_remote() == 0) {
-    return;
-  }
-  FileId *old_file_id = [&] {
-    switch (content->get_type()) {
-      case MessageContentType::Animation:
-        return &static_cast<MessageAnimation *>(content)->file_id;
-      case MessageContentType::Audio:
-        return &static_cast<MessageAudio *>(content)->file_id;
-      case MessageContentType::Document:
-        return &static_cast<MessageDocument *>(content)->file_id;
-      case MessageContentType::Sticker:
-        return &static_cast<MessageSticker *>(content)->file_id;
-      case MessageContentType::Video:
-        return &static_cast<MessageVideo *>(content)->file_id;
-      case MessageContentType::VideoNote:
-        return &static_cast<MessageVideoNote *>(content)->file_id;
-      case MessageContentType::VoiceNote:
-        return &static_cast<MessageVoiceNote *>(content)->file_id;
-      case MessageContentType::PaidMedia:
-        UNREACHABLE();
-        return static_cast<FileId *>(nullptr);
-      default:
-        return static_cast<FileId *>(nullptr);
-    }
-  }();
-  if (old_file_id != nullptr && *old_file_id == file_id && old_file_id->get_remote() == 0) {
-    *old_file_id = file_id;
-  }
-}
-
-void update_message_content_file_id_remotes(MessageContent *content, const vector<FileId> &file_ids) {
-  auto content_type = content->get_type();
-  if (content_type == MessageContentType::PaidMedia) {
-    auto &media = static_cast<MessagePaidMedia *>(content)->media;
-    if (file_ids.size() != media.size()) {
-      return;
-    }
-    for (size_t i = 0; i < file_ids.size(); i++) {
-      media[i].update_file_id_remote(file_ids[i]);
-    }
-    return;
-  }
-  if (file_ids.size() != 1) {
-    return;
-  }
-  update_message_content_file_id_remote(content, file_ids[0]);
 }
 
 FileId get_message_content_thumbnail_file_id(const MessageContent *content, const Td *td) {

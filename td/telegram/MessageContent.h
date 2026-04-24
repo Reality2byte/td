@@ -331,10 +331,6 @@ FileId get_message_content_cover_any_file_id(const MessageContent *content);
 
 vector<FileId> get_message_content_cover_any_file_ids(const MessageContent *content);
 
-void update_message_content_file_id_remote(MessageContent *content, FileId file_id);
-
-void update_message_content_file_id_remotes(MessageContent *content, const vector<FileId> &file_ids);
-
 FileId get_message_content_thumbnail_file_id(const MessageContent *content, const Td *td);
 
 vector<FileId> get_message_content_thumbnail_file_ids(const MessageContent *content, const Td *td);
