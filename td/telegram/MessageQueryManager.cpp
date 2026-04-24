@@ -1731,6 +1731,38 @@ class DeleteParticipantReactionQuery final : public Td::ResultHandler {
   }
 };
 
+class GetPersonalChannelHistoryQuery final : public Td::ResultHandler {
+  Promise<td_api::object_ptr<td_api::messages>> promise_;
+
+ public:
+  explicit GetPersonalChannelHistoryQuery(Promise<td_api::object_ptr<td_api::messages>> &&promise)
+      : promise_(std::move(promise)) {
+  }
+
+  void send(telegram_api::object_ptr<telegram_api::InputUser> &&input_user, int32 limit) {
+    send_query(G()->net_query_creator().create(telegram_api::messages_getPersonalChannelHistory(
+        std::move(input_user), limit, 0, std::numeric_limits<int32>::max(), 0)));
+  }
+
+  void on_result(BufferSlice packet) final {
+    auto result_ptr = fetch_result<telegram_api::messages_getPersonalChannelHistory>(packet);
+    if (result_ptr.is_error()) {
+      return on_error(result_ptr.move_as_error());
+    }
+
+    auto messages_info = get_messages_info(td_, DialogId(), result_ptr.move_as_ok(), "GetPersonalChannelHistoryQuery");
+    auto messages = td_api::make_object<td_api::messages>();
+    for (auto &message : messages_info.messages) {
+      messages->messages_.push_back(td_->messages_manager_->get_guest_message_object(std::move(message), false));
+    }
+    promise_.set_value(std::move(messages));
+  }
+
+  void on_error(Status status) final {
+    promise_.set_error(std::move(status));
+  }
+};
+
 class ReadMentionsQuery final : public Td::ResultHandler {
   Promise<AffectedHistory> promise_;
   DialogId dialog_id_;
@@ -3602,6 +3634,16 @@ void MessageQueryManager::delete_reaction_by_sender(DialogId dialog_id, MessageI
 
   td_->create_handler<DeleteParticipantReactionQuery>(std::move(promise))
       ->send(dialog_id, message_id, sender_dialog_id);
+}
+
+void MessageQueryManager::get_personal_chat_history(UserId user_id, int32 limit,
+                                                    Promise<td_api::object_ptr<td_api::messages>> &&promise) {
+  TRY_RESULT_PROMISE(promise, input_user, td_->user_manager_->get_input_user(user_id));
+  if (limit <= 0) {
+    return promise.set_error(400, "Limit must be positive");
+  }
+
+  td_->create_handler<GetPersonalChannelHistoryQuery>(std::move(promise))->send(std::move(input_user), limit);
 }
 
 void MessageQueryManager::read_all_topic_mentions_on_server(DialogId dialog_id, ForumTopicId forum_topic_id,

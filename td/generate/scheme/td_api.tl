@@ -13766,6 +13766,11 @@ toggleBotCanManageEmojiStatus bot_user_id:int53 can_manage_emoji_status:Bool = O
 //@description Changes the emoji status of a user; for bots only @user_id Identifier of the user @emoji_status New emoji status; pass null to switch to the default badge
 setUserEmojiStatus user_id:int53 emoji_status:emojiStatus = Ok;
 
+//@description Returns messages in the personal chat of a given user; for bots only
+//@user_id User identifier
+//@limit The maximum number of messages to be returned; 1-20
+getPersonalChatHistory user_id:int53 limit:int32 = Messages;
+
 
 //@description Searches a user by their phone number. Returns a 404 error if the user can't be found
 //@phone_number Phone number to search for

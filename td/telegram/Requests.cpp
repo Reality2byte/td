@@ -6502,6 +6502,12 @@ void Requests::on_request(uint64 id, const td_api::setUserEmojiStatus &request) 
                                             EmojiStatus::get_emoji_status(request.emoji_status_), std::move(promise));
 }
 
+void Requests::on_request(uint64 id, const td_api::getPersonalChatHistory &request) {
+  CHECK_IS_BOT();
+  CREATE_REQUEST_PROMISE();
+  td_->message_query_manager_->get_personal_chat_history(UserId(request.user_id_), request.limit_, std::move(promise));
+}
+
 void Requests::on_request(uint64 id, td_api::searchUserByPhoneNumber &request) {
   CHECK_IS_USER();
   CLEAN_INPUT_STRING(request.phone_number_);
