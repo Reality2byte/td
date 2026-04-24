@@ -8097,6 +8097,10 @@ bool MessagesManager::can_share_message_in_story(DialogId dialog_id, const Messa
   return dialog_id.get_type() == DialogType::Channel && m != nullptr && m->message_id.is_server();
 }
 
+bool MessagesManager::can_delete_message_reactions(DialogId dialog_id, const Message *m) const {
+  return td_->dialog_manager_->get_dialog_permissions(dialog_id).can_delete_messages() && m->message_id.is_server();
+}
+
 bool MessagesManager::can_get_message_statistics(MessageFullId message_full_id) {
   return can_get_message_statistics(message_full_id.get_dialog_id(),
                                     get_message_force(message_full_id, "can_get_message_statistics"));
@@ -15119,6 +15123,7 @@ void MessagesManager::get_message_properties(DialogId dialog_id, MessageId messa
   auto can_be_replied = can_reply_to_message(d, message_id, m);
   auto can_be_replied_in_another_chat = can_reply_to_message_in_another_dialog(dialog_id, message_id, can_be_forwarded);
   auto can_be_shared_in_story = can_share_message_in_story(dialog_id, m);
+  auto can_delete_reactions = can_delete_message_reactions(dialog_id, m);
   auto can_edit_media = can_edit_message_media(dialog_id, m, false);
   auto can_edit_scheduling_state = can_edit_message_scheduling_state(m);
   auto can_edit_suggested_post_info = can_edit_message_suggested_post(m);
@@ -15153,11 +15158,11 @@ void MessagesManager::get_message_properties(DialogId dialog_id, MessageId messa
   promise.set_value(td_api::make_object<td_api::messageProperties>(
       can_add_offer, can_add_tasks, can_be_approved, can_be_copied, can_be_copied_to_secret_chat, can_be_declined,
       can_delete_for_self, can_delete_for_all_users, can_be_edited, can_be_forwarded, can_be_paid, can_be_pinned,
-      can_be_replied, can_be_replied_in_another_chat, can_be_saved, can_be_shared_in_story, can_edit_media,
-      can_edit_scheduling_state, can_edit_suggested_post_info, can_get_author, can_get_embedding_code, can_get_link,
-      can_get_media_timestamp_links, can_get_message_thread, can_get_poll_vote_statistics, can_get_read_date,
-      can_get_statistics, can_get_video_advertisements, can_get_viewers, can_mark_tasks_as_done, can_recognize_speech,
-      can_report_chat, can_report_reactions, can_report_supergroup_spam, can_set_fact_check,
+      can_be_replied, can_be_replied_in_another_chat, can_be_saved, can_be_shared_in_story, can_delete_reactions,
+      can_edit_media, can_edit_scheduling_state, can_edit_suggested_post_info, can_get_author, can_get_embedding_code,
+      can_get_link, can_get_media_timestamp_links, can_get_message_thread, can_get_poll_vote_statistics,
+      can_get_read_date, can_get_statistics, can_get_video_advertisements, can_get_viewers, can_mark_tasks_as_done,
+      can_recognize_speech, can_report_chat, can_report_reactions, can_report_supergroup_spam, can_set_fact_check,
       has_protected_content_by_current_user, has_protected_content_by_other_user, need_show_statistics));
 }
 
