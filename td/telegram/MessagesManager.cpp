@@ -8098,7 +8098,10 @@ bool MessagesManager::can_share_message_in_story(DialogId dialog_id, const Messa
 }
 
 bool MessagesManager::can_delete_message_reactions(DialogId dialog_id, const Message *m) const {
-  return td_->dialog_manager_->get_dialog_permissions(dialog_id).can_delete_messages() && m->message_id.is_server();
+  return td_->dialog_manager_->is_group_dialog(dialog_id) && !td_->dialog_manager_->is_monoforum_channel(dialog_id) &&
+         td_->dialog_manager_->get_dialog_permissions(dialog_id).can_delete_messages() && m->message_id.is_server() &&
+         m->reactions != nullptr && !m->reactions->are_empty() && !m->reactions->are_tags_ &&
+         m->reactions->can_get_added_reactions_ && !is_discussion_message(dialog_id, m);
 }
 
 bool MessagesManager::can_get_message_statistics(MessageFullId message_full_id) {
