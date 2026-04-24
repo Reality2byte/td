@@ -3879,6 +3879,13 @@ void Requests::on_request(uint64 id, const td_api::removeMessageReaction &reques
                                                   ReactionType(request.reaction_type_), std::move(promise));
 }
 
+void Requests::on_request(uint64 id, const td_api::deleteAllRecentMessageReactionsFromSender &request) {
+  CREATE_OK_REQUEST_PROMISE();
+  TRY_RESULT_PROMISE(promise, sender_dialog_id, get_message_sender_dialog_id(td_, request.sender_id_, false, false));
+  td_->message_query_manager_->delete_reactions_by_sender(DialogId(request.chat_id_), sender_dialog_id,
+                                                          std::move(promise));
+}
+
 void Requests::on_request(uint64 id, const td_api::setMessageReactions &request) {
   CHECK_IS_BOT();
   CREATE_OK_REQUEST_PROMISE();

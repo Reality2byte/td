@@ -12031,6 +12031,11 @@ addMessageReaction chat_id:int53 message_id:int53 reaction_type:ReactionType is_
 //@reaction_type Type of the reaction to remove. The paid reaction can't be removed
 removeMessageReaction chat_id:int53 message_id:int53 reaction_type:ReactionType = Ok;
 
+//@description Deletes all recent reactions added by the specified message sender in a chat. Supported only for basic groups and supergroups; requires can_delete_messages administrator right
+//@chat_id Chat identifier
+//@sender_id Identifier of the sender of reactions to delete
+deleteAllRecentMessageReactionsFromSender chat_id:int53 sender_id:MessageSender = Ok;
+
 //@description Returns the list of message sender identifiers, which can be used to send a paid reaction in a chat @chat_id Chat identifier
 getChatAvailablePaidMessageReactionSenders chat_id:int53 = MessageSenders;
 

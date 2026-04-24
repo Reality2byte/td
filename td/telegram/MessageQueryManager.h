@@ -203,6 +203,8 @@ class MessageQueryManager final : public Actor {
 
   void delete_topic_history(DialogId dialog_id, ForumTopicId forum_topic_id, Promise<Unit> &&promise);
 
+  void delete_reactions_by_sender(DialogId dialog_id, DialogId sender_dialog_id, Promise<Unit> &&promise);
+
   void read_all_dialog_mentions_on_server(DialogId dialog_id, uint64 log_event_id, Promise<Unit> &&promise);
 
   void read_all_dialog_reactions_on_server(DialogId dialog_id, uint64 log_event_id, Promise<Unit> &&promise);

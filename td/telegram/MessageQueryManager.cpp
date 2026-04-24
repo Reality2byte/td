@@ -1653,6 +1653,45 @@ class DeleteTopicHistoryQuery final : public Td::ResultHandler {
   }
 };
 
+class DeleteParticipantReactionsQuery final : public Td::ResultHandler {
+  Promise<Unit> promise_;
+  DialogId dialog_id_;
+  DialogId sender_dialog_id_;
+
+ public:
+  explicit DeleteParticipantReactionsQuery(Promise<Unit> &&promise) : promise_(std::move(promise)) {
+  }
+
+  void send(DialogId dialog_id, DialogId sender_dialog_id) {
+    dialog_id_ = dialog_id;
+    sender_dialog_id_ = sender_dialog_id;
+
+    auto input_peer = td_->dialog_manager_->get_input_peer(dialog_id, AccessRights::Write);
+    CHECK(input_peer != nullptr);
+    auto sender_input_peer = td_->dialog_manager_->get_input_peer(sender_dialog_id, AccessRights::Know);
+    CHECK(sender_input_peer != nullptr);
+
+    send_query(G()->net_query_creator().create(
+        telegram_api::messages_deleteParticipantReactions(std::move(input_peer), std::move(sender_input_peer))));
+  }
+
+  void on_result(BufferSlice packet) final {
+    auto result_ptr = fetch_result<telegram_api::messages_deleteParticipantReactions>(packet);
+    if (result_ptr.is_error()) {
+      return on_error(result_ptr.move_as_error());
+    }
+
+    promise_.set_value(Unit());
+  }
+
+  void on_error(Status status) final {
+    if (sender_dialog_id_.get_type() != DialogType::Channel) {
+      td_->dialog_manager_->on_get_dialog_error(dialog_id_, status, "DeleteParticipantReactionsQuery");
+    }
+    promise_.set_error(std::move(status));
+  }
+};
+
 class ReadMentionsQuery final : public Td::ResultHandler {
   Promise<AffectedHistory> promise_;
   DialogId dialog_id_;
@@ -3494,6 +3533,19 @@ void MessageQueryManager::delete_topic_history_on_server(DialogId dialog_id, For
     td->create_handler<DeleteTopicHistoryQuery>(std::move(query_promise))->send(dialog_id, forum_topic_id);
   };
   run_affected_history_query_until_complete(dialog_id, std::move(query), true, std::move(promise));
+}
+
+void MessageQueryManager::delete_reactions_by_sender(DialogId dialog_id, DialogId sender_dialog_id,
+                                                     Promise<Unit> &&promise) {
+  TRY_STATUS_PROMISE(promise, td_->dialog_manager_->check_dialog_access(dialog_id, true, AccessRights::Write,
+                                                                        "delete_reactions_by_sender"));
+  if (!td_->dialog_manager_->have_input_peer(sender_dialog_id, false, AccessRights::Know)) {
+    return promise.set_error(400, "Reaction sender not found");
+  }
+
+  // td_->messages_manager_->delete_local_reactions_by_sender(dialog_id, sender_dialog_id);
+
+  td_->create_handler<DeleteParticipantReactionsQuery>(std::move(promise))->send(dialog_id, sender_dialog_id);
 }
 
 void MessageQueryManager::read_all_topic_mentions_on_server(DialogId dialog_id, ForumTopicId forum_topic_id,
