@@ -5736,6 +5736,7 @@ bool is_uploaded_input_media(telegram_api::object_ptr<telegram_api::InputMedia> 
 }
 
 void delete_message_content_thumbnail(MessageContent *content, Td *td, int32 media_pos) {
+  CHECK(content != nullptr);
   if (media_pos != -1) {
     CHECK(can_message_content_have_multiple_files(content->get_type()));
   }
@@ -5770,6 +5771,12 @@ void delete_message_content_thumbnail(MessageContent *content, Td *td, int32 med
     case MessageContentType::Photo: {
       auto *m = static_cast<MessagePhoto *>(content);
       return photo_delete_thumbnail(m->photo);
+    }
+    case MessageContentType::Poll: {
+      auto *m = static_cast<MessagePoll *>(content);
+      delete_message_content_thumbnail(
+          td->poll_manager_->get_individual_message_content(m->poll_id, m->attached_media, media_pos).get(), td, -1);
+      break;
     }
     case MessageContentType::Sticker: {
       auto *m = static_cast<MessageSticker *>(content);
@@ -5817,7 +5824,6 @@ void delete_message_content_thumbnail(MessageContent *content, Td *td, int32 med
     case MessageContentType::WebsiteConnected:
     case MessageContentType::PassportDataSent:
     case MessageContentType::PassportDataReceived:
-    case MessageContentType::Poll:
     case MessageContentType::ProximityAlertTriggered:
     case MessageContentType::GroupCall:
     case MessageContentType::InviteToGroupCall:
