@@ -2012,24 +2012,17 @@ void QuickReplyManager::update_sent_message_content_from_temporary_message(const
 void QuickReplyManager::update_sent_message_content_from_temporary_message(
     const unique_ptr<MessageContent> &old_content, FileUploadId old_file_upload_id,
     unique_ptr<MessageContent> &new_content, bool need_merge_files) {
-  MessageContentType old_content_type = old_content->get_type();
-  MessageContentType new_content_type = new_content->get_type();
-
-  need_merge_files = need_merge_files && old_file_upload_id.is_valid();
-  if (old_content_type != new_content_type) {
-    if (need_merge_files) {
-      td_->file_manager_->try_merge_documents(get_message_content_any_file_id(new_content.get()),
-                                              old_file_upload_id.get_file_id());
-    }
-  } else {
-    bool is_content_changed = false;
-    bool need_update = false;
-    merge_message_contents(td_, old_content.get(), new_content.get(), true, DialogId(), need_merge_files,
-                           is_content_changed, need_update);
+  vector<FileUploadId> old_file_upload_ids;
+  if (old_file_upload_id.is_valid()) {
+    old_file_upload_ids.push_back(old_file_upload_id);
   }
+  bool is_content_changed = false;
+  bool need_update = false;
+  merge_and_compare_message_contents(td_, old_content.get(), new_content.get(), true, DialogId(), need_merge_files,
+                                     old_file_upload_ids, MessageSelfDestructType(), 0.0, nullptr, is_content_changed,
+                                     need_update);
   if (old_file_upload_id.is_valid()) {
     send_closure_later(G()->file_manager(), &FileManager::cancel_upload, old_file_upload_id);
-
     update_message_content_file_id_remote(new_content.get(), old_file_upload_id.get_file_id());
   }
 }
