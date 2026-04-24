@@ -8304,7 +8304,7 @@ void compare_message_contents(Td *td, const MessageContent *old_content, const M
   }
 }
 
-void merge_and_compare_message_contents(Td *td, const MessageContent *old_content, MessageContent *new_content,
+void merge_and_compare_message_contents(Td *td, MessageContent *old_content, MessageContent *new_content,
                                         bool need_message_changed_warning, DialogId dialog_id, bool need_merge_files,
                                         const vector<FileUploadId> &old_file_upload_ids, MessageSelfDestructType ttl,
                                         double ttl_expires_at, bool *is_content_secret, bool &is_content_changed,
@@ -8336,6 +8336,13 @@ void merge_and_compare_message_contents(Td *td, const MessageContent *old_conten
     merge_message_contents(td, old_content, new_content, need_message_changed_warning, dialog_id, need_merge_files,
                            is_content_changed, need_update);
     compare_message_contents(td, old_content, new_content, is_content_changed, need_update);
+  }
+
+  if (is_content_changed || need_update) {
+    update_message_content_file_id_remotes(
+        new_content, transform(old_file_upload_ids, [](auto &file_upload_id) { return file_upload_id.get_file_id(); }));
+  } else {
+    update_message_content_file_id_remotes(old_content, get_message_content_any_file_ids(new_content));
   }
 }
 

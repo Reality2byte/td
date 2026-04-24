@@ -32282,14 +32282,9 @@ bool MessagesManager::update_message_content(DialogId dialog_id, Message *old_me
     }
     old_content = std::move(new_content);
     old_message->last_edit_pts = 0;
-    update_message_content_file_id_remotes(old_content.get(), transform(old_file_upload_ids, [](auto &file_upload_id) {
-                                             return file_upload_id.get_file_id();
-                                           }));
-  } else {
-    update_message_content_file_id_remotes(old_content.get(), get_message_content_any_file_ids(new_content.get()));
-  }
-  if (is_content_changed && !need_update) {
-    LOG(INFO) << "Content of " << old_message->message_id << " in " << dialog_id << " has changed";
+    if (!need_update) {
+      LOG(INFO) << "Content of " << old_message->message_id << " in " << dialog_id << " has changed";
+    }
   }
 
   if (need_update) {

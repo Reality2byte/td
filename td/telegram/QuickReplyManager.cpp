@@ -1998,7 +1998,7 @@ void QuickReplyManager::process_send_quick_reply_updates(QuickReplyShortcutId sh
   save_quick_reply_shortcuts();
 }
 
-void QuickReplyManager::update_sent_message_content_from_temporary_message(const QuickReplyMessage *old_message,
+void QuickReplyManager::update_sent_message_content_from_temporary_message(QuickReplyMessage *old_message,
                                                                            QuickReplyMessage *new_message,
                                                                            bool is_edit) {
   CHECK(is_edit ? old_message->message_id.is_server() : old_message->message_id.is_yet_unsent());
@@ -2009,21 +2009,21 @@ void QuickReplyManager::update_sent_message_content_from_temporary_message(const
       is_edit || new_message->edit_date == 0);
 }
 
-void QuickReplyManager::update_sent_message_content_from_temporary_message(
-    const unique_ptr<MessageContent> &old_content, FileUploadId old_file_upload_id,
-    unique_ptr<MessageContent> &new_content, bool need_merge_files) {
+void QuickReplyManager::update_sent_message_content_from_temporary_message(unique_ptr<MessageContent> &old_content,
+                                                                           FileUploadId old_file_upload_id,
+                                                                           unique_ptr<MessageContent> &new_content,
+                                                                           bool need_merge_files) {
   vector<FileUploadId> old_file_upload_ids;
   if (old_file_upload_id.is_valid()) {
     old_file_upload_ids.push_back(old_file_upload_id);
   }
-  bool is_content_changed = false;
-  bool need_update = false;
+  bool is_content_changed = true;
+  bool need_update = true;
   merge_and_compare_message_contents(td_, old_content.get(), new_content.get(), true, DialogId(), need_merge_files,
                                      old_file_upload_ids, MessageSelfDestructType(), 0.0, nullptr, is_content_changed,
                                      need_update);
   if (old_file_upload_id.is_valid()) {
     send_closure_later(G()->file_manager(), &FileManager::cancel_upload, old_file_upload_id);
-    update_message_content_file_id_remote(new_content.get(), old_file_upload_id.get_file_id());
   }
 }
 
@@ -2475,7 +2475,7 @@ void QuickReplyManager::on_message_media_uploaded(const QuickReplyMessage *m,
 void QuickReplyManager::on_upload_message_media_success(QuickReplyShortcutId shortcut_id, MessageId message_id,
                                                         FileUploadId file_upload_id,
                                                         telegram_api::object_ptr<telegram_api::MessageMedia> &&media) {
-  const auto *m = get_message({shortcut_id, message_id});
+  auto *m = get_message_editable({shortcut_id, message_id});
   if (m == nullptr) {
     send_closure_later(G()->file_manager(), &FileManager::cancel_upload, file_upload_id);
     return;

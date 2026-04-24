@@ -1490,9 +1490,6 @@ void BusinessConnectionManager::complete_upload_media(unique_ptr<PendingMessage>
 
   if (is_content_changed || need_update) {
     old_content = std::move(new_content);
-    update_message_content_file_id_remote(old_content.get(), old_file_id);
-  } else {
-    update_message_content_file_id_remote(old_content.get(), get_message_content_any_file_id(new_content.get()));
   }
 
   auto input_media =
