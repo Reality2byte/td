@@ -1865,6 +1865,23 @@ vector<unique_ptr<MessageContent>> PollManager::get_individual_message_contents(
   return message_contents;
 }
 
+unique_ptr<MessageContent> &PollManager::get_individual_message_content(PollId poll_id,
+                                                                        unique_ptr<MessageContent> &attached_media,
+                                                                        int32 media_pos) {
+  auto poll = get_poll_editable(poll_id);
+  CHECK(poll != nullptr);
+  CHECK(is_local_poll_id(poll_id));
+  if (media_pos == 0) {
+    return attached_media;
+  }
+  if (media_pos == 1) {
+    return poll->explanation_media_;
+  }
+  auto pos = static_cast<size_t>(media_pos - 2);
+  CHECK(pos < poll->options_.size());
+  return poll->options_[pos].media_;
+}
+
 PollId PollManager::dup_poll(DialogId dialog_id, PollId poll_id) {
   auto poll = get_poll(poll_id);
   CHECK(poll != nullptr);

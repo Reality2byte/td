@@ -11594,6 +11594,18 @@ unique_ptr<MessageContent> get_uploaded_message_content(
         }
         return std::move(content);
       }
+      case MessageContentType::Poll: {
+        auto m = dup_message_content(td, DialogId(), old_content, MessageContentDupType::Forward, MessageCopyOptions());
+        CHECK(m->get_type() == MessageContentType::Poll);
+        auto poll = static_cast<MessagePoll *>(m.get());
+        auto new_content = get_message_content(td, FormattedText(), std::move(media_ptr), owner_dialog_id, message_date,
+                                               false, UserId(), nullptr, nullptr, source);
+        auto &content =
+            td->poll_manager_->get_individual_message_content(poll->poll_id, poll->attached_media, media_pos);
+        CHECK(content != nullptr);
+        content = std::move(new_content);
+        return std::move(m);
+      }
       default:
         UNREACHABLE();
     }
