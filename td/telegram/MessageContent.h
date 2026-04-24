@@ -238,6 +238,12 @@ bool merge_message_content_file_id(Td *td, MessageContent *message_content, File
 void compare_message_contents(Td *td, const MessageContent *lhs_content, const MessageContent *rhs_content,
                               bool &is_content_changed, bool &need_update);
 
+void merge_and_compare_message_contents(Td *td, const MessageContent *old_content, MessageContent *new_content,
+                                        bool need_message_changed_warning, DialogId dialog_id, bool need_merge_files,
+                                        const vector<FileUploadId> &old_file_upload_ids, MessageSelfDestructType ttl,
+                                        double ttl_expires_at, bool *is_content_secret, bool &is_content_changed,
+                                        bool &need_update);
+
 void register_message_content(Td *td, const MessageContent *content, MessageFullId message_full_id, int32 message_date,
                               const char *source);
 

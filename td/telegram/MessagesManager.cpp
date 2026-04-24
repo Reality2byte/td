@@ -32257,8 +32257,6 @@ bool MessagesManager::update_message_content(DialogId dialog_id, Message *old_me
   bool need_update = false;
 
   unique_ptr<MessageContent> &old_content = old_message->content;
-  MessageContentType old_content_type = old_content->get_type();
-  MessageContentType new_content_type = new_content->get_type();
 
   vector<FileUploadId> old_file_upload_ids;
   if (old_message->message_id.is_any_server()) {
@@ -32269,31 +32267,11 @@ bool MessagesManager::update_message_content(DialogId dialog_id, Message *old_me
   } else {
     old_file_upload_ids = old_message->file_upload_ids;
   }
-  if (old_content_type != new_content_type) {
-    if (old_message->ttl.is_valid() && old_message->ttl_expires_at > 0 &&
-        is_expired_message_content(new_content_type) &&
-        get_expired_message_content_type(old_content_type) == new_content_type) {
-      LOG(INFO) << "Do not apply expired message content early";
-    } else {
-      need_update = true;
-      LOG(INFO) << "Message content has changed type from " << old_content_type << " to " << new_content_type;
+  merge_and_compare_message_contents(td_, old_content.get(), new_content.get(),
+                                     need_message_changed_warning(old_message), dialog_id, need_merge_files,
+                                     old_file_upload_ids, old_message->ttl, old_message->ttl_expires_at,
+                                     &old_message->is_content_secret, is_content_changed, need_update);
 
-      old_message->is_content_secret = old_message->ttl.is_secret_message_content(new_content->get_type());
-    }
-
-    if (need_merge_files) {
-      auto new_file_ids = get_message_content_any_file_ids(new_content.get());
-      if (new_file_ids.size() == old_file_upload_ids.size()) {
-        for (size_t i = 0; i < old_file_upload_ids.size(); i++) {
-          td_->file_manager_->try_merge_documents(new_file_ids[i], old_file_upload_ids[i].get_file_id());
-        }
-      }
-    }
-  } else {
-    merge_message_contents(td_, old_content.get(), new_content.get(), need_message_changed_warning(old_message),
-                           dialog_id, need_merge_files, is_content_changed, need_update);
-    compare_message_contents(td_, old_content.get(), new_content.get(), is_content_changed, need_update);
-  }
   // upload of yet unsent messages is canceled in delete_message or on_upload_message_media_success
   // upload of being edited messages is canceled in on_message_media_edited
 
