@@ -5541,7 +5541,7 @@ void MessagesManager::add_pending_channel_update(DialogId dialog_id, tl_object_p
   if (d == nullptr) {
     d = get_dialog(dialog_id);
     if (d == nullptr) {
-      LOG(INFO) << "Update didn't created " << dialog_id;
+      LOG(INFO) << "Update didn't create " << dialog_id;
       promise.set_value(Unit());
       return;
     }
@@ -12796,7 +12796,7 @@ void MessagesManager::on_get_dialogs(FolderId folder_id, vector<tl_object_ptr<te
       folder->last_server_dialog_date_ = max_dialog_date;
       update_last_dialog_date(folder_id);
     } else if (promise) {
-      LOG(ERROR) << "Last server dialog date didn't increased from " << folder->last_server_dialog_date_ << " to "
+      LOG(ERROR) << "Last server dialog date didn't increase from " << folder->last_server_dialog_date_ << " to "
                  << max_dialog_date << " after receiving " << dialogs.size() << " chats " << added_dialog_ids
                  << " from " << total_count << " in " << folder_id
                  << ". last_dialog_date = " << folder->folder_last_dialog_date_
@@ -13935,7 +13935,7 @@ void MessagesManager::on_get_dialogs_from_database(FolderId folder_id, int32 lim
       }
     }
   } else {
-    LOG(ERROR) << "Last loaded database dialog date didn't increased, skipped " << dialogs_skipped << " chats out of "
+    LOG(ERROR) << "Last loaded database dialog date didn't increase. Skipped " << dialogs_skipped << " chats out of "
                << dialogs.dialogs.size();
   }
 

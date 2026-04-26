@@ -3104,7 +3104,7 @@ void UserManager::on_get_user(telegram_api::object_ptr<telegram_api::User> &&use
         u = add_user(user_id);
       }
     } else if (is_contact && !are_contacts_loaded_) {
-      // preload contact users from database to know that is_contact didn't changed
+      // preload contact users from database to know that is_contact didn't change
       // and the list of contacts doesn't need to be saved to the database
       u = get_user_force(user_id, "on_get_user 3");
       if (u == nullptr) {
