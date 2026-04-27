@@ -21726,7 +21726,8 @@ void MessagesManager::do_send_message(DialogId dialog_id, const Message *m, int3
   }
 
   if (bad_parts.empty()) {
-    auto file_ids = get_message_content_any_file_ids(content);  // any_file_ids, because it could be a photo sent by ID
+    auto file_ids =
+        get_message_content_any_file_ids(td_, content);  // any_file_ids, because it could be a photo sent by ID
     auto thumbnail_file_ids = get_message_content_thumbnail_file_ids(content, td_);
     if (file_ids.size() != thumbnail_file_ids.size()) {
       CHECK(file_ids.size() == 1u);
@@ -21900,7 +21901,7 @@ void MessagesManager::on_message_media_uploaded(DialogId dialog_id, const Messag
                              int64 random_id = begin_send_message(dialog_id, m);
                              td_->create_handler<SendMediaQuery>()->send(
                                  m->file_upload_ids, m->thumbnail_file_upload_ids,
-                                 get_message_content_cover_any_file_ids(m->content.get()), get_message_flags(m),
+                                 get_message_content_cover_any_file_ids(td_, m->content.get()), get_message_flags(m),
                                  dialog_id, get_send_message_as_input_peer(m), *get_message_input_reply_to(m),
                                  get_send_message_topic(dialog_id, m), get_message_schedule_date(m),
                                  get_message_schedule_repeat_period(m), m->effect_id, m->paid_message_star_count,
@@ -21911,7 +21912,7 @@ void MessagesManager::on_message_media_uploaded(DialogId dialog_id, const Messag
     if (!is_uploaded_input_media(input_media)) {
       auto file_upload_id = get_message_send_file_upload_id(dialog_id, m, media_pos);
       auto thumbnail_file_upload_id = get_message_send_thumbnail_file_upload_id(dialog_id, m, media_pos);
-      auto cover_file_ids = get_message_content_cover_any_file_ids(m->content.get());
+      auto cover_file_ids = get_message_content_cover_any_file_ids(td_, m->content.get());
       FileId cover_file_id;
       if (!cover_file_ids.empty()) {
         if (media_pos == -1) {
@@ -22382,7 +22383,7 @@ void MessagesManager::do_send_internal_media_group(DialogId dialog_id, MessageId
 
   const FormattedText *caption = get_message_content_text(m->content.get());
   td_->create_handler<SendMediaQuery>()->send(
-      m->file_upload_ids, m->thumbnail_file_upload_ids, get_message_content_cover_any_file_ids(m->content.get()),
+      m->file_upload_ids, m->thumbnail_file_upload_ids, get_message_content_cover_any_file_ids(td_, m->content.get()),
       get_message_flags(m), dialog_id, get_send_message_as_input_peer(m), *get_message_input_reply_to(m),
       get_send_message_topic(dialog_id, m), get_message_schedule_date(m), get_message_schedule_repeat_period(m),
       m->effect_id, m->paid_message_star_count, m->suggested_post.get(), m->reply_markup, caption,

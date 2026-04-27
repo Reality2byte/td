@@ -325,11 +325,11 @@ vector<MessageCover> get_message_content_need_to_upload_covers(Td *td, const Mes
 
 FileId get_message_content_any_file_id(const MessageContent *content);
 
-vector<FileId> get_message_content_any_file_ids(const MessageContent *content);
+vector<FileId> get_message_content_any_file_ids(const Td *td, const MessageContent *content);
 
 FileId get_message_content_cover_any_file_id(const MessageContent *content);
 
-vector<FileId> get_message_content_cover_any_file_ids(const MessageContent *content);
+vector<FileId> get_message_content_cover_any_file_ids(const Td *td, const MessageContent *content);
 
 FileId get_message_content_thumbnail_file_id(const MessageContent *content, const Td *td);
 

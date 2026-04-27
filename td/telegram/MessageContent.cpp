@@ -5687,7 +5687,7 @@ telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_input_med
   auto file_references = FileManager::extract_file_references(input_media);
   for (size_t i = 0; i < file_references.size(); i++) {
     if (file_references[i] == FileReferenceView::invalid_file_reference()) {
-      auto file_ids = get_message_content_any_file_ids(content);
+      auto file_ids = get_message_content_any_file_ids(td, content);
       CHECK(file_ids.size() == file_references.size());
       auto file_id = file_ids[i];
       if (!file_id.is_valid()) {
@@ -8447,7 +8447,7 @@ void merge_and_compare_message_contents(Td *td, MessageContent *old_content, Mes
     }
 
     if (need_merge_files) {
-      auto new_file_ids = get_message_content_any_file_ids(new_content);
+      auto new_file_ids = get_message_content_any_file_ids(td, new_content);
       if (new_file_ids.size() == old_file_upload_ids.size()) {
         for (size_t i = 0; i < old_file_upload_ids.size(); i++) {
           td->file_manager_->try_merge_documents(new_file_ids[i], old_file_upload_ids[i].get_file_id());
@@ -8464,7 +8464,7 @@ void merge_and_compare_message_contents(Td *td, MessageContent *old_content, Mes
     update_message_content_file_id_remotes(
         new_content, transform(old_file_upload_ids, [](auto &file_upload_id) { return file_upload_id.get_file_id(); }));
   } else {
-    update_message_content_file_id_remotes(old_content, get_message_content_any_file_ids(new_content));
+    update_message_content_file_id_remotes(old_content, get_message_content_any_file_ids(td, new_content));
   }
 }
 
@@ -11890,12 +11890,21 @@ FileId get_message_content_any_file_id(const MessageContent *content) {
   return FileId();
 }
 
-vector<FileId> get_message_content_any_file_ids(const MessageContent *content) {
+vector<FileId> get_message_content_any_file_ids(const Td *td, const MessageContent *content) {
   CHECK(content != nullptr);
   auto content_type = content->get_type();
   if (content_type == MessageContentType::PaidMedia) {
     return transform(static_cast<const MessagePaidMedia *>(content)->media,
                      [](const MessageExtendedMedia &media) { return media.get_any_file_id(); });
+  }
+  if (content_type == MessageContentType::Poll) {
+    const auto *m = static_cast<const MessagePoll *>(content);
+    vector<FileId> file_ids;
+    for (const auto *poll_content :
+         td->poll_manager_->get_individual_message_content_refs(m->poll_id, m->attached_media.get())) {
+      file_ids.push_back(poll_content != nullptr ? get_message_content_any_file_id(poll_content) : FileId());
+    }
+    return file_ids;
   }
   auto file_id = get_message_content_any_file_id(content);
   if (file_id.is_valid()) {
@@ -11925,7 +11934,7 @@ FileId get_message_content_cover_any_file_id(const MessageContent *content) {
   return {};
 }
 
-vector<FileId> get_message_content_cover_any_file_ids(const MessageContent *content) {
+vector<FileId> get_message_content_cover_any_file_ids(const Td *td, const MessageContent *content) {
   CHECK(content != nullptr);
   switch (content->get_type()) {
     case MessageContentType::Photo: {
@@ -11945,6 +11954,15 @@ vector<FileId> get_message_content_cover_any_file_ids(const MessageContent *cont
     case MessageContentType::PaidMedia:
       return transform(static_cast<const MessagePaidMedia *>(content)->media,
                        [](const MessageExtendedMedia &media) { return media.get_cover_any_file_id(); });
+    case MessageContentType::Poll: {
+      const auto *m = static_cast<const MessagePoll *>(content);
+      vector<FileId> file_ids;
+      for (const auto *poll_content :
+           td->poll_manager_->get_individual_message_content_refs(m->poll_id, m->attached_media.get())) {
+        file_ids.push_back(poll_content != nullptr ? get_message_content_cover_any_file_id(poll_content) : FileId());
+      }
+      return file_ids;
+    }
     default:
       break;
   }
