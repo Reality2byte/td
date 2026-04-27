@@ -11759,6 +11759,7 @@ bool has_message_content_cover(const MessageContent *content) {
 }
 
 vector<MessageCover> get_message_content_need_to_upload_covers(Td *td, const MessageContent *content) {
+  CHECK(content != nullptr);
   switch (content->get_type()) {
     case MessageContentType::Photo: {
       auto video_file_id = static_cast<const MessagePhoto *>(content)->video_file_id;
@@ -11782,6 +11783,17 @@ vector<MessageCover> get_message_content_need_to_upload_covers(Td *td, const Mes
         auto cover = media.get_need_to_upload_cover(td);
         if (!cover.is_empty()) {
           result.push_back(std::move(cover));
+        }
+      }
+      return result;
+    }
+    case MessageContentType::Poll: {
+      const auto *m = static_cast<const MessagePoll *>(content);
+      vector<MessageCover> result;
+      for (const auto *poll_content :
+           td->poll_manager_->get_individual_message_content_refs(m->poll_id, m->attached_media.get())) {
+        if (poll_content != nullptr) {
+          append(result, get_message_content_need_to_upload_covers(td, poll_content));
         }
       }
       return result;
