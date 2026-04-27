@@ -1847,22 +1847,14 @@ void PollManager::on_online() {
 
 vector<unique_ptr<MessageContent>> PollManager::get_individual_message_contents(
     PollId poll_id, const MessageContent *attached_media) const {
-  auto poll = get_poll(poll_id);
-  CHECK(poll != nullptr);
-
-  vector<unique_ptr<MessageContent>> message_contents;
-  auto add_message_content = [&, td = td_](const MessageContent *content) {
-    if (content == nullptr) {
-      return create_empty_text_message_content();
-    }
-    return dup_message_content(td, DialogId(), content, MessageContentDupType::ServerCopy, MessageCopyOptions());
-  };
-  add_message_content(attached_media);
-  add_message_content(poll->explanation_media_.get());
-  for (const auto &option : poll->options_) {
-    add_message_content(option.media_.get());
-  }
-  return message_contents;
+  return transform(get_individual_message_content_refs(poll_id, attached_media),
+                   [td = td_](const MessageContent *content) {
+                     if (content == nullptr) {
+                       return create_empty_text_message_content();
+                     }
+                     return dup_message_content(td, DialogId(), content, MessageContentDupType::ServerCopy,
+                                                MessageCopyOptions(true, false));
+                   });
 }
 
 vector<MessageContent *> PollManager::get_individual_message_content_refs(PollId poll_id,
