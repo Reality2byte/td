@@ -7182,6 +7182,22 @@ void merge_message_contents(Td *td, const MessageContent *old_content, MessageCo
       merge_photos(td, &old_->photo, &new_->photo, dialog_id, need_merge_files, is_content_changed, need_update);
       break;
     }
+    case MessageContentType::Poll: {
+      const auto old_contents = get_individual_message_contents(td, old_content);
+      auto new_contents = get_individual_message_contents(td, new_content);
+      auto *new_ = static_cast<MessagePoll *>(new_content);
+      if (old_contents.size() != new_contents.size()) {
+        LOG(ERROR) << "Had " << old_contents.size() << " paid media, but now have " << new_contents.size();
+      } else {
+        for (size_t i = 0; i < old_contents.size(); i++) {
+          auto &new_poll_content = td->poll_manager_->get_individual_message_content(
+              new_->poll_id, new_->attached_media, static_cast<int32>(i));
+          merge_message_contents(td, old_contents[i].get(), new_poll_content.get(), need_message_changed_warning,
+                                 dialog_id, need_merge_files, is_content_changed, need_update);
+        }
+      }
+      break;
+    }
     case MessageContentType::Sticker: {
       const auto *old_ = static_cast<const MessageSticker *>(old_content);
       const auto *new_ = static_cast<const MessageSticker *>(new_content);
@@ -7254,7 +7270,6 @@ void merge_message_contents(Td *td, const MessageContent *old_content, MessageCo
     case MessageContentType::WebsiteConnected:
     case MessageContentType::PassportDataSent:
     case MessageContentType::PassportDataReceived:
-    case MessageContentType::Poll:
     case MessageContentType::Dice:
     case MessageContentType::ProximityAlertTriggered:
     case MessageContentType::GroupCall:
