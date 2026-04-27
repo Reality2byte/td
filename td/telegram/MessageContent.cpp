@@ -11668,6 +11668,13 @@ int32 get_message_content_duration(const MessageContent *content, const Td *td) 
       }
       return result;
     }
+    case MessageContentType::Poll: {
+      int32 result = -1;
+      for (const auto &poll_content : get_individual_message_contents(td, content)) {
+        result = max(result, get_message_content_duration(poll_content.get(), td));
+      }
+      return result;
+    }
     case MessageContentType::Video: {
       auto video_file_id = static_cast<const MessageVideo *>(content)->file_id;
       return td->videos_manager_->get_video_duration(video_file_id);
