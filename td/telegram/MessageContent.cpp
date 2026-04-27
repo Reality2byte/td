@@ -5481,20 +5481,22 @@ static telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_in
     }
     case MessageContentType::Poll: {
       const auto *m = static_cast<const MessagePoll *>(content);
-      auto message_contents = get_individual_message_contents(td, content);
+      auto message_contents =
+          td->poll_manager_->get_individual_message_content_refs(m->poll_id, m->attached_media.get());
       if (media_pos >= 0) {
         CHECK(static_cast<size_t>(media_pos) < message_contents.size());
-        return get_message_content_input_media_impl(message_contents[media_pos].get(), -1, td, std::move(input_file),
+        CHECK(message_contents[media_pos] != nullptr);
+        return get_message_content_input_media_impl(message_contents[media_pos], -1, td, std::move(input_file),
                                                     std::move(input_thumbnail), ttl, emoji);
       }
       CHECK(input_file == nullptr && input_thumbnail == nullptr);
       vector<telegram_api::object_ptr<telegram_api::InputMedia>> input_media;
       for (auto &message_content : message_contents) {
-        if (message_content->get_type() == MessageContentType::Text) {
+        if (message_content == nullptr) {
           input_media.push_back(nullptr);
           continue;
         }
-        auto media = get_message_content_input_media_impl(message_content.get(), -1, td, nullptr, nullptr, ttl, emoji);
+        auto media = get_message_content_input_media_impl(message_content, -1, td, nullptr, nullptr, ttl, emoji);
         if (media == nullptr) {
           return nullptr;
         }
@@ -7183,17 +7185,27 @@ void merge_message_contents(Td *td, const MessageContent *old_content, MessageCo
       break;
     }
     case MessageContentType::Poll: {
-      const auto old_contents = get_individual_message_contents(td, old_content);
-      auto new_contents = get_individual_message_contents(td, new_content);
+      const auto *old_ = static_cast<const MessagePoll *>(old_content);
       auto *new_ = static_cast<MessagePoll *>(new_content);
+      const auto old_contents =
+          td->poll_manager_->get_individual_message_content_refs(old_->poll_id, old_->attached_media.get());
+      auto new_contents =
+          td->poll_manager_->get_individual_message_content_refs(new_->poll_id, new_->attached_media.get());
       if (old_contents.size() != new_contents.size()) {
         LOG(ERROR) << "Had " << old_contents.size() << " paid media, but now have " << new_contents.size();
       } else {
         for (size_t i = 0; i < old_contents.size(); i++) {
-          auto &new_poll_content = td->poll_manager_->get_individual_message_content(
-              new_->poll_id, new_->attached_media, static_cast<int32>(i));
-          merge_message_contents(td, old_contents[i].get(), new_poll_content.get(), need_message_changed_warning,
-                                 dialog_id, need_merge_files, is_content_changed, need_update);
+          if (old_contents[i] == nullptr) {
+            if (new_contents[i] != nullptr) {
+              LOG(ERROR) << "Have " << new_contents[i]->get_type() << " as new content";
+            }
+            continue;
+          }
+          if (new_contents[i] == nullptr) {
+            LOG(ERROR) << "Have " << old_contents[i]->get_type() << " as old content";
+          }
+          merge_message_contents(td, old_contents[i], new_contents[i], need_message_changed_warning, dialog_id,
+                                 need_merge_files, is_content_changed, need_update);
         }
       }
       break;
@@ -11669,9 +11681,13 @@ int32 get_message_content_duration(const MessageContent *content, const Td *td) 
       return result;
     }
     case MessageContentType::Poll: {
+      const auto *m = static_cast<const MessagePoll *>(content);
       int32 result = -1;
-      for (const auto &poll_content : get_individual_message_contents(td, content)) {
-        result = max(result, get_message_content_duration(poll_content.get(), td));
+      for (const auto *poll_content :
+           td->poll_manager_->get_individual_message_content_refs(m->poll_id, m->attached_media.get())) {
+        if (poll_content != nullptr) {
+          result = max(result, get_message_content_duration(poll_content, td));
+        }
       }
       return result;
     }

@@ -1865,6 +1865,34 @@ vector<unique_ptr<MessageContent>> PollManager::get_individual_message_contents(
   return message_contents;
 }
 
+vector<MessageContent *> PollManager::get_individual_message_content_refs(PollId poll_id,
+                                                                          MessageContent *attached_media) {
+  auto poll = get_poll_editable(poll_id);
+  CHECK(poll != nullptr);
+
+  vector<MessageContent *> message_contents;
+  message_contents.push_back(attached_media);
+  message_contents.push_back(poll->explanation_media_.get());
+  for (auto &option : poll->options_) {
+    message_contents.push_back(option.media_.get());
+  }
+  return message_contents;
+}
+
+vector<const MessageContent *> PollManager::get_individual_message_content_refs(
+    PollId poll_id, const MessageContent *attached_media) const {
+  auto poll = get_poll(poll_id);
+  CHECK(poll != nullptr);
+
+  vector<const MessageContent *> message_contents;
+  message_contents.push_back(attached_media);
+  message_contents.push_back(poll->explanation_media_.get());
+  for (const auto &option : poll->options_) {
+    message_contents.push_back(option.media_.get());
+  }
+  return message_contents;
+}
+
 unique_ptr<MessageContent> &PollManager::get_individual_message_content(PollId poll_id,
                                                                         unique_ptr<MessageContent> &attached_media,
                                                                         int32 media_pos) {

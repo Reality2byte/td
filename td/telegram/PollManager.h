@@ -110,6 +110,11 @@ class PollManager final : public Actor {
   vector<unique_ptr<MessageContent>> get_individual_message_contents(PollId poll_id,
                                                                      const MessageContent *attached_media) const;
 
+  vector<MessageContent *> get_individual_message_content_refs(PollId poll_id, MessageContent *attached_media);
+
+  vector<const MessageContent *> get_individual_message_content_refs(PollId poll_id,
+                                                                     const MessageContent *attached_media) const;
+
   unique_ptr<MessageContent> &get_individual_message_content(PollId poll_id, unique_ptr<MessageContent> &attached_media,
                                                              int32 media_pos);
 
