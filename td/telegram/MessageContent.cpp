@@ -8405,7 +8405,7 @@ static void update_message_content_file_id_remote(MessageContent *content, FileI
   }
 }
 
-static void update_message_content_file_id_remotes(MessageContent *content, const vector<FileId> &file_ids) {
+static void update_message_content_file_id_remotes(Td *td, MessageContent *content, const vector<FileId> &file_ids) {
   CHECK(content != nullptr);
   auto content_type = content->get_type();
   if (content_type == MessageContentType::PaidMedia) {
@@ -8415,6 +8415,19 @@ static void update_message_content_file_id_remotes(MessageContent *content, cons
     }
     for (size_t i = 0; i < file_ids.size(); i++) {
       media[i].update_file_id_remote(file_ids[i]);
+    }
+    return;
+  }
+  if (content_type == MessageContentType::Poll) {
+    auto *m = static_cast<MessagePoll *>(content);
+    auto poll_contents = td->poll_manager_->get_individual_message_content_refs(m->poll_id, m->attached_media.get());
+    if (file_ids.size() != poll_contents.size()) {
+      return;
+    }
+    for (size_t i = 0; i < file_ids.size(); i++) {
+      if (poll_contents[i] != nullptr) {
+        update_message_content_file_id_remote(poll_contents[i], file_ids[i]);
+      }
     }
     return;
   }
@@ -8461,10 +8474,11 @@ void merge_and_compare_message_contents(Td *td, MessageContent *old_content, Mes
   }
 
   if (is_content_changed || need_update) {
-    update_message_content_file_id_remotes(
-        new_content, transform(old_file_upload_ids, [](auto &file_upload_id) { return file_upload_id.get_file_id(); }));
+    update_message_content_file_id_remotes(td, new_content, transform(old_file_upload_ids, [](auto &file_upload_id) {
+                                             return file_upload_id.get_file_id();
+                                           }));
   } else {
-    update_message_content_file_id_remotes(old_content, get_message_content_any_file_ids(td, new_content));
+    update_message_content_file_id_remotes(td, old_content, get_message_content_any_file_ids(td, new_content));
   }
 }
 
