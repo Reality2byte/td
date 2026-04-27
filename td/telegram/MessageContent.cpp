@@ -12010,6 +12010,15 @@ vector<FileId> get_message_content_thumbnail_file_ids(const MessageContent *cont
     return transform(static_cast<const MessagePaidMedia *>(content)->media,
                      [&](const MessageExtendedMedia &media) { return media.get_thumbnail_file_id(td); });
   }
+  if (content_type == MessageContentType::Poll) {
+    const auto *m = static_cast<const MessagePoll *>(content);
+    vector<FileId> file_ids;
+    for (const auto *poll_content :
+         td->poll_manager_->get_individual_message_content_refs(m->poll_id, m->attached_media.get())) {
+      file_ids.push_back(poll_content != nullptr ? get_message_content_thumbnail_file_id(poll_content, td) : FileId());
+    }
+    return file_ids;
+  }
   auto file_id = get_message_content_thumbnail_file_id(content, td);
   if (file_id.is_valid()) {
     return {file_id};
