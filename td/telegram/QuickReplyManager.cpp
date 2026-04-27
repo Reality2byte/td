@@ -3460,7 +3460,17 @@ Result<InputMessageContent> QuickReplyManager::process_input_message_content(
     return Status::Error(400, "Can't add live location as a quick reply");
   }
   // update addQuickReplyShortcutMessage documentation
-  return get_input_message_content(DialogId(), std::move(input_message_content), td_, true);
+  TRY_RESULT(content, get_input_message_content(DialogId(), std::move(input_message_content), td_, true));
+  if (content.content->get_type() == MessageContentType::Poll) {
+    auto file_ids = get_message_content_file_ids(content.content.get(), td_);
+    for (auto file_id : file_ids) {
+      if (file_id.is_valid()) {
+        // TODO remove when supported
+        return Status::Error(400, "Can't send polls with media as a quick reply");
+      }
+    }
+  }
+  return std::move(content);
 }
 
 MessageId QuickReplyManager::get_next_message_id(Shortcut *s, MessageType type) const {
