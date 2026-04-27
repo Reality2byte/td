@@ -12464,6 +12464,16 @@ bool need_reget_message_content(const Td *td, const MessageContent *content) {
       }
       return false;
     }
+    case MessageContentType::Poll: {
+      const auto *m = static_cast<const MessagePoll *>(content);
+      for (const auto *poll_content :
+           td->poll_manager_->get_individual_message_content_refs(m->poll_id, m->attached_media.get())) {
+        if (poll_content != nullptr && need_reget_message_content(td, poll_content)) {
+          return true;
+        }
+      }
+      return false;
+    }
     case MessageContentType::Video: {
       const auto *m = static_cast<const MessageVideo *>(content);
       for (auto file_id : m->alternative_file_ids) {
