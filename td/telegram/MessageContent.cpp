@@ -11717,13 +11717,6 @@ int32 get_message_content_media_duration(const MessageContent *content, const Td
     }
     case MessageContentType::Invoice:
       return static_cast<const MessageInvoice *>(content)->input_invoice.get_duration(td);
-    case MessageContentType::PaidMedia: {
-      int32 result = -1;
-      for (const auto &media : static_cast<const MessagePaidMedia *>(content)->media) {
-        result = max(result, media.get_duration(td));
-      }
-      return result;
-    }
     case MessageContentType::Story: {
       auto story_full_id = static_cast<const MessageStory *>(content)->story_full_id;
       return td->story_manager_->get_story_duration(story_full_id);
