@@ -24089,7 +24089,7 @@ unique_ptr<MessageForwardInfo> MessagesManager::create_message_forward_info(Dial
   if (to_dialog_id == my_dialog_id) {
     last_message_info = LastForwardedMessageInfo(from_dialog_id, m->message_id, get_message_sender(m), string(),
                                                  m->date, m->is_outgoing || from_dialog_id == my_dialog_id);
-  } else if (content_type == MessageContentType::Audio || content_type == MessageContentType::Story) {
+  } else if (content_type == MessageContentType::Story) {
     return nullptr;
   }
 
@@ -24113,9 +24113,6 @@ unique_ptr<MessageForwardInfo> MessagesManager::create_message_forward_info(Dial
 
 void MessagesManager::fix_forwarded_message(Message *m, DialogId to_dialog_id, const Message *forwarded_message,
                                             int64 media_album_id, bool drop_author) const {
-  if (m->content->get_type() == MessageContentType::Audio) {
-    drop_author = true;
-  }
   bool is_game = m->content->get_type() == MessageContentType::Game;
   if (!drop_author || is_game) {
     m->via_bot_user_id = forwarded_message->via_bot_user_id;
