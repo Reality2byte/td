@@ -20769,6 +20769,7 @@ MessageInputReplyTo MessagesManager::create_message_input_reply_to(
       const Message *m = get_message_force(d, message_id, "create_message_input_reply_to 2");
       if (!can_reply_to_message(d, message_id, m)) {
         message_id = {};
+        m = nullptr;
       }
       if (m == nullptr) {
         if (message_id.is_server() && d->dialog_id.get_type() != DialogType::SecretChat &&
