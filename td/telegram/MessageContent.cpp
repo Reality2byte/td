@@ -8394,6 +8394,7 @@ static void update_message_content_file_id_remote(MessageContent *content, FileI
       case MessageContentType::VoiceNote:
         return &static_cast<MessageVoiceNote *>(content)->file_id;
       case MessageContentType::PaidMedia:
+      case MessageContentType::Poll:
         UNREACHABLE();
         return static_cast<FileId *>(nullptr);
       default:
@@ -11896,6 +11897,7 @@ FileId get_message_content_any_file_id(const MessageContent *content) {
     case MessageContentType::VoiceNote:
       return static_cast<const MessageVoiceNote *>(content)->file_id;
     case MessageContentType::PaidMedia:
+    case MessageContentType::Poll:
       UNREACHABLE();
       break;
     default:
@@ -11940,6 +11942,7 @@ FileId get_message_content_cover_any_file_id(const MessageContent *content) {
       break;
     }
     case MessageContentType::PaidMedia:
+    case MessageContentType::Poll:
       UNREACHABLE();
       break;
     default:
@@ -12009,6 +12012,7 @@ FileId get_message_content_thumbnail_file_id(const MessageContent *content, cons
     case MessageContentType::VoiceNote:
       return FileId();
     case MessageContentType::PaidMedia:
+    case MessageContentType::Poll:
       UNREACHABLE();
       return FileId();
     default:
