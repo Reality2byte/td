@@ -8130,7 +8130,6 @@ bool MessagesManager::can_get_message_poll_vote_statistics(DialogId dialog_id, c
     return false;
   }
   if (m == nullptr || !m->message_id.is_server() || m->content->get_type() != MessageContentType::Poll ||
-      m->forward_info != nullptr || m->had_forward_info ||
       !td_->dialog_manager_->have_input_peer(dialog_id, false, AccessRights::Read)) {
     return false;
   }
