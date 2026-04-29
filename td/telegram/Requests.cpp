@@ -2080,13 +2080,14 @@ void Requests::on_request(uint64 id, td_api::setAuthenticationPhoneNumber &reque
 
 void Requests::on_request(uint64 id, td_api::checkAuthenticationPremiumPurchase &request) {
   CLEAN_INPUT_STRING(request.currency_);
-  send_closure(td_->auth_manager_actor_, &AuthManager::check_premium_purchase, id, std::move(request.currency_),
-               request.amount_);
+  send_closure(td_->auth_manager_actor_, &AuthManager::check_premium_purchase, id, request.premium_day_count_,
+               std::move(request.currency_), request.amount_);
 }
 
 void Requests::on_request(uint64 id, td_api::setAuthenticationPremiumPurchaseTransaction &request) {
   send_closure(td_->auth_manager_actor_, &AuthManager::set_premium_purchase_transaction, id,
-               std::move(request.transaction_), request.is_restore_, std::move(request.currency_), request.amount_);
+               std::move(request.transaction_), request.is_restore_, request.premium_day_count_,
+               std::move(request.currency_), request.amount_);
 }
 
 void Requests::on_request(uint64 id, td_api::sendAuthenticationFirebaseSms &request) {

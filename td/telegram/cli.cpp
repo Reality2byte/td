@@ -2911,10 +2911,12 @@ class CliClient final : public Actor {
       send_request(
           td_api::make_object<td_api::setAuthenticationPhoneNumber>(args, as_phone_number_authentication_settings()));
     } else if (op == "capp") {
+      int32 premium_day_count;
       string currency;
       int64 amount;
-      get_args(args, currency, amount);
-      send_request(td_api::make_object<td_api::checkAuthenticationPremiumPurchase>(currency, amount));
+      get_args(args, premium_day_count, currency, amount);
+      send_request(
+          td_api::make_object<td_api::checkAuthenticationPremiumPurchase>(premium_day_count, currency, amount));
     } else if (op == "sae" || op == "saea") {
       send_request(td_api::make_object<td_api::setAuthenticationEmailAddress>(args));
     } else if (op == "rac") {
