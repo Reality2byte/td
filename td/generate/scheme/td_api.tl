@@ -171,9 +171,10 @@ authorizationStateWaitPhoneNumber = AuthorizationState;
 
 //@description The user must buy Telegram Premium as an in-store purchase to log in. Call checkAuthenticationPremiumPurchase and then setAuthenticationPremiumPurchaseTransaction
 //@store_product_id Identifier of the store product that must be bought
+//@premium_day_count Duration of the Telegram Premium subscription after the purchase; may be 0 if Telegram Premium subscription will not be granted
 //@support_email_address Email address to use for support if the user has issues with Telegram Premium purchase
 //@support_email_subject Subject for the email sent to the support email address
-authorizationStateWaitPremiumPurchase store_product_id:string support_email_address:string support_email_subject:string = AuthorizationState;
+authorizationStateWaitPremiumPurchase store_product_id:string premium_day_count:int32 support_email_address:string support_email_subject:string = AuthorizationState;
 
 //@description TDLib needs the user's email address to authorize. Call setAuthenticationEmailAddress to provide the email address, or directly call checkAuthenticationEmailCode with Apple ID/Google ID token if allowed
 //@allow_apple_id True, if authorization through Apple ID is allowed

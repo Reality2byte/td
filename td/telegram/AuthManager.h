@@ -190,6 +190,7 @@ class AuthManager final : public NetActor {
   string store_product_id_;
   string support_email_address_;
   string support_email_subject_;
+  int32 premium_day_count_ = 0;
 
   // State::WaitEmailAddress
   bool allow_apple_id_ = false;
