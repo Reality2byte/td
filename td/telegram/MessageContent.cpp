@@ -4902,6 +4902,8 @@ static Result<InputMessageContent> create_input_message_content(
       if (utf8_length(question.text) > MAX_POLL_QUESTION_LENGTH) {
         return Status::Error(400, PSLICE() << "Poll question length must not exceed " << MAX_POLL_QUESTION_LENGTH);
       }
+      TRY_RESULT(media, td->poll_manager_->get_poll_media_message_content(std::move(input_poll->media_), dialog_id,
+                                                                          is_premium));
       TRY_RESULT(options, PollOption::get_poll_options(td, dialog_id, std::move(input_poll->options_)));
 
       bool is_quiz = false;
@@ -4949,7 +4951,7 @@ static Result<InputMessageContent> create_input_message_content(
                                          std::move(input_poll->country_codes_), input_poll->shuffle_options_,
                                          input_poll->hide_results_until_closes_, is_quiz, std::move(correct_option_ids),
                                          std::move(explanation), nullptr, open_period, close_date, is_closed),
-          std::move(caption), nullptr);
+          std::move(caption), std::move(media));
       break;
     }
     case td_api::inputMessageStory::ID: {

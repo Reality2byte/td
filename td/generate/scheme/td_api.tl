@@ -5653,6 +5653,8 @@ inputMessageInvoice invoice:invoice title:string description:string photo_url:st
 //@question Poll question; 1-255 characters (up to 300 characters for bots). Only custom emoji entities are allowed to be added and only by Premium users
 //@options List of poll answer options; 1-getOption("poll_answer_count_max") options
 //@param_description Poll description; pass null to use an empty description; 0-getOption("message_caption_length_max") characters
+//@media Media attached to the poll; pass null if none. Must be one of the following types: inputMessageAnimation, inputMessageAudio, inputMessageDocument, non-live inputMessageLocation,
+//-inputMessagePhoto, inputMessageVenue, or inputMessageVideo without caption
 //@is_anonymous True, if the poll voters are anonymous. Non-anonymous polls can't be sent or forwarded to channels
 //@allows_multiple_answers True, if multiple answer options can be chosen simultaneously
 //@allows_revoting True, if the poll can be answered multiple times
@@ -5664,7 +5666,7 @@ inputMessageInvoice invoice:invoice title:string description:string photo_url:st
 //@open_period Amount of time the poll will be active after creation, in seconds; 0-getOption("poll_open_period_max"); pass 0 if not specified
 //@close_date Point in time (Unix timestamp) when the poll will automatically be closed; must be 0-getOption("poll_open_period_max") seconds in the future; pass 0 if not specified
 //@is_closed True, if the poll needs to be sent already closed; for bots only
-inputMessagePoll question:formattedText options:vector<inputPollOption> description:formattedText is_anonymous:Bool allows_multiple_answers:Bool allows_revoting:Bool member_only:Bool country_codes:vector<string> shuffle_options:Bool hide_results_until_closes:Bool type:InputPollType open_period:int32 close_date:int32 is_closed:Bool = InputMessageContent;
+inputMessagePoll question:formattedText options:vector<inputPollOption> description:formattedText media:InputMessageContent is_anonymous:Bool allows_multiple_answers:Bool allows_revoting:Bool member_only:Bool country_codes:vector<string> shuffle_options:Bool hide_results_until_closes:Bool type:InputPollType open_period:int32 close_date:int32 is_closed:Bool = InputMessageContent;
 
 //@description A stake dice message
 //@state_hash Hash of the stake dice state. The state hash can be used only if it was received recently enough. Otherwise, a new state must be requested using getStakeDiceState

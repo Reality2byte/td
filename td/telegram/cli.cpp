@@ -6860,7 +6860,7 @@ class CliClient final : public Actor {
         country_codes.push_back("US");
       }
       send_message(chat_id, td_api::make_object<td_api::inputMessagePoll>(
-                                as_formatted_text(question), std::move(options), get_caption(), op != "spollp",
+                                as_formatted_text(question), std::move(options), get_caption(), nullptr, op != "spollp",
                                 rand_bool(), rand_bool(), rand_bool(), std::move(country_codes), rand_bool(),
                                 rand_bool(), std::move(poll_type), 0, 0, false));
     } else if (op == "schl") {
