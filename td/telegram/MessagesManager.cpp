@@ -21814,7 +21814,8 @@ void MessagesManager::do_send_message(DialogId dialog_id, const Message *m, int3
         FileView file_view = td_->file_manager_->get_file_view(file_upload_id.get_file_id());
         if (can_have_multiple_files) {
           if (file_view.empty()) {
-            on_upload_message_media_finished(m->media_album_id, dialog_id, m->message_id, static_cast<int32>(i), Status::OK());
+            on_upload_message_media_finished(m->media_album_id, dialog_id, m->message_id, static_cast<int32>(i),
+                                             Status::OK());
             continue;
           }
           if (!file_view.has_full_remote_location() && file_view.has_url()) {
@@ -35146,19 +35147,23 @@ void MessagesManager::update_top_dialogs(DialogId dialog_id, const Message *m) {
     return;
   }
 
-  bool is_forward = is_message_forward(m);
-  if (m->via_bot_user_id.is_valid() && !is_forward) {
-    // forwarded game messages can't be distinguished from sent via bot game messages, so increase rating anyway
-    on_dialog_used(TopDialogCategory::BotInline, DialogId(m->via_bot_user_id), m->date);
-  }
-
-  if (is_forward) {
+  if (is_message_forward(m)) {
     auto &last_forward_date = last_outgoing_forwarded_message_date_[dialog_id];
     if (last_forward_date < m->date) {
       TopDialogCategory category =
           dialog_type == DialogType::User ? TopDialogCategory::ForwardUsers : TopDialogCategory::ForwardChats;
       on_dialog_used(category, dialog_id, m->date);
       last_forward_date = m->date;
+    }
+  } else {
+    if (m->via_bot_user_id.is_valid()) {
+      // forwarded game messages can't be distinguished from sent via bot game messages, so increase rating anyway
+      on_dialog_used(TopDialogCategory::BotInline, DialogId(m->via_bot_user_id), m->date);
+    }
+    if (m->guest_bot_via_dialog_id != DialogId() &&
+        m->guest_bot_via_dialog_id == td_->dialog_manager_->get_my_dialog_id() && m->sender_user_id != UserId() &&
+        td_->user_manager_->is_user_bot(m->sender_user_id)) {
+      on_dialog_used(TopDialogCategory::BotGuest, DialogId(m->sender_user_id), m->date);
     }
   }
 
