@@ -3134,11 +3134,11 @@ chatNotificationSettings use_default_mute_for:Bool mute_for:int32 use_default_so
 
 //@description Contains information about notification settings for several chats
 //@mute_for Time left before notifications will be unmuted, in seconds
-//@sound_id Identifier of the notification sound to be played; 0 if sound is disabled
+//@sound_id Identifier of the notification sound to be played; 0 if sound is disabled; pass -1 to use the app-dependent default sound
 //@show_preview True, if message content must be displayed in notifications
 //@use_default_mute_stories If true, story notifications are received only for the first 5 chats from topChatCategoryUsers regardless of the value of mute_stories
 //@mute_stories True, if story notifications are disabled
-//@story_sound_id Identifier of the notification sound to be played for stories; 0 if sound is disabled
+//@story_sound_id Identifier of the notification sound to be played for stories; 0 if sound is disabled; pass -1 to use the app-dependent default sound
 //@show_story_poster True, if the chat that posted a story must be displayed in notifications
 //@disable_pinned_message_notifications True, if notifications for incoming pinned messages will be created as for an ordinary unread message
 //@disable_mention_notifications True, if notifications for messages with mentions will be created as for an ordinary unread message
@@ -3161,7 +3161,7 @@ reactionNotificationSourceAll = ReactionNotificationSource;
 //@message_reaction_source Source of message reactions for which notifications are shown
 //@story_reaction_source Source of story reactions for which notifications are shown
 //@poll_vote_source Source of poll votes for which notifications are shown
-//@sound_id Identifier of the notification sound to be played; 0 if sound is disabled
+//@sound_id Identifier of the notification sound to be played; 0 if sound is disabled; pass -1 to use the app-dependent default sound
 //@show_preview True, if reaction sender and emoji must be displayed in notifications
 reactionNotificationSettings message_reaction_source:ReactionNotificationSource story_reaction_source:ReactionNotificationSource poll_vote_source:ReactionNotificationSource sound_id:int64 show_preview:Bool = ReactionNotificationSettings;
 
