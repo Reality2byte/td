@@ -4944,6 +4944,10 @@ static Result<InputMessageContent> create_input_message_content(
           td->option_manager_->get_option_integer("poll_country_count_max")) {
         return Status::Error(400, "Too many countries specified");
       }
+      if (!td->dialog_manager_->is_broadcast_channel(dialog_id) &&
+          (input_poll->member_only_ || !input_poll->country_codes_.empty())) {
+        return Status::Error(400, "Poll voters can be restricted only in channel chats");
+      }
 
       int32 open_period = input_poll->open_period_;
       int32 close_date = input_poll->close_date_;
