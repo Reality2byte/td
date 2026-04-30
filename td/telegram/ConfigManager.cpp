@@ -1423,6 +1423,7 @@ void ConfigManager::process_app_config(tl_object_ptr<telegram_api::JSONValue> &c
       {"poll_answer_delete_period", ""},
       {"poll_answers_max", "poll_answer_count_max"},
       {"poll_close_period_max", "poll_open_period_max"},
+      {"poll_countries_max", "poll_country_count_max"},
       {"quick_replies_limit", "quick_reply_shortcut_count_max"},
       {"quick_reply_messages_limit", "quick_reply_shortcut_message_count_max"},
       {"quote_length_max", "message_reply_quote_length_max"},

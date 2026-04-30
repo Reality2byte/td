@@ -4940,6 +4940,10 @@ static Result<InputMessageContent> create_input_message_content(
           return Status::Error(400, "Invalid country code specified");
         }
       }
+      if (static_cast<int64>(input_poll->country_codes_.size()) >
+          td->option_manager_->get_option_integer("poll_country_count_max")) {
+        return Status::Error(400, "Too many countries specified");
+      }
 
       int32 open_period = input_poll->open_period_;
       int32 close_date = input_poll->close_date_;

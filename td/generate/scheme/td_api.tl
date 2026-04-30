@@ -5663,7 +5663,8 @@ inputMessageInvoice invoice:invoice title:string description:string photo_url:st
 //@allows_multiple_answers True, if multiple answer options can be chosen simultaneously
 //@allows_revoting True, if the poll can be answered multiple times
 //@member_only True, if only the users that are members of the chat for more than a day will be able to vote
-//@country_codes The list of two-letter ISO 3166-1 alpha-2 codes of countries, users from which will be able to vote. If empty, then all users can participate in the poll
+//@country_codes The list of two-letter ISO 3166-1 alpha-2 codes of countries, users from which will be able to vote. If empty, then all users can participate in the poll.
+//-There can be up to getOption("poll_country_count_max") chosen countries
 //@shuffle_options True, if poll options must be shown in a fixed random order
 //@hide_results_until_closes True, if the poll results will appear only after the poll closes
 //@type Type of the poll
