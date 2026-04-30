@@ -211,7 +211,7 @@ OptionManager::OptionManager(Td *td)
   set_default_integer_option("has_protected_content_disable_request_duration", is_test_dc ? 300 : 86400);
   set_default_integer_option("poll_open_period_max", 730 * 3600);
   set_default_integer_option("owned_bot_count_max", 20);
-  set_default_integer_option("text_composition_style_example_count", 7);
+  set_default_integer_option("text_composition_style_example_count", 3);
   set_default_integer_option("text_composition_style_title_length_max", 12);
   set_default_integer_option("text_composition_style_prompt_length_max", 1024);
   set_default_integer_option("poll_country_count_max", 12);
