@@ -11422,7 +11422,7 @@ getMessageEmbeddingCode chat_id:int53 message_id:int53 for_album:Bool = Text;
 getMessageLinkInfo url:string = MessageLinkInfo;
 
 
-//@description Creates a custom text composition style
+//@description Creates a custom text composition style. May return an error with a message "TONES_SAVED_TOO_MANY" if the maximum number of added custom styles has been reached
 //@title Title of the style; 1-getOption("text_composition_style_title_length_max") characters
 //@custom_emoji_id Identifier of the custom emoji corresponding to the style
 //@prompt Prompt that will be used for text composition; 1-getOption("text_composition_style_prompt_length_max") characters
