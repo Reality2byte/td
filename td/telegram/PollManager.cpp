@@ -685,9 +685,6 @@ td_api::object_ptr<td_api::PollVoteRestrictionReason> PollManager::get_poll_vote
       return td_api::make_object<td_api::pollVoteRestrictionReasonScheduled>();
     }
   }
-  if (dialog_id == DialogId()) {
-    return td_api::make_object<td_api::pollVoteRestrictionReasonQuickReply>();
-  }
   if (!is_real_message_content) {
     return td_api::make_object<td_api::pollVoteRestrictionReasonOther>();
   }

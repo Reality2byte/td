@@ -467,9 +467,6 @@ pollVoteRestrictionReasonYetUnsent = PollVoteRestrictionReason;
 //@description The poll is from a scheduled message
 pollVoteRestrictionReasonScheduled = PollVoteRestrictionReason;
 
-//@description The poll is from a quick reply message
-pollVoteRestrictionReasonQuickReply = PollVoteRestrictionReason;
-
 //@description The user is from a country, users from which aren't allowed to vote
 //@country_code Two-letter ISO 3166-1 alpha-2 code of the current user's country
 pollVoteRestrictionReasonCountryRestricted country_code:string = PollVoteRestrictionReason;
