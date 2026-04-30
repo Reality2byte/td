@@ -28,7 +28,6 @@
 #include "td/telegram/MessagesManager.h"
 #include "td/telegram/MessageTopic.h"
 #include "td/telegram/misc.h"
-#include "td/telegram/OptionManager.h"
 #include "td/telegram/ReplyMarkup.h"
 #include "td/telegram/SavedMessagesTopicId.h"
 #include "td/telegram/ServerMessageId.h"
