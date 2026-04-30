@@ -1938,9 +1938,6 @@ Result<unique_ptr<MessageContent>> PollManager::get_poll_media_message_content(
   if (caption != nullptr && !caption->text.empty()) {
     return Status::Error(400, "Media caption must be empty");
   }
-  if (get_message_content_live_location_period(attached_media_content.content.get()) != 0) {
-    return Status::Error(400, "Live locations are not supported");
-  }
   if (!attached_media_content.ttl.is_empty() || attached_media_content.via_bot_user_id != UserId() ||
       !attached_media_content.emoji.empty()) {
     return Status::Error(400, "Unallowed media parameters specified");
