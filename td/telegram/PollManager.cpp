@@ -1917,11 +1917,13 @@ PollId PollManager::dup_poll(DialogId dialog_id, PollId poll_id) {
     explanation_media = dup_message_content(td_, dialog_id, poll->explanation_media_.get(), MessageContentDupType::Copy,
                                             MessageCopyOptions(true, false));
   }
-  return create_poll(std::move(question), std::move(options), poll->is_anonymous_, poll->allow_multiple_answers_,
-                     poll->has_open_answers_, poll->has_revoting_disabled_, poll->subscribers_only_,
-                     vector<string>(poll->country_codes_), poll->shuffle_answers_, poll->hide_results_until_close_,
-                     poll->is_quiz_, poll->correct_option_ids_, std::move(explanation), std::move(explanation_media),
-                     poll->open_period_, poll->open_period_ == 0 ? 0 : G()->unix_time(), false);
+  bool is_broadcast = td_->dialog_manager_->is_broadcast_channel(dialog_id);
+  return create_poll(
+      std::move(question), std::move(options), poll->is_anonymous_, poll->allow_multiple_answers_,
+      poll->has_open_answers_, poll->has_revoting_disabled_, is_broadcast ? poll->subscribers_only_ : false,
+      is_broadcast ? vector<string>(poll->country_codes_) : vector<string>(), poll->shuffle_answers_,
+      poll->hide_results_until_close_, poll->is_quiz_, poll->correct_option_ids_, std::move(explanation),
+      std::move(explanation_media), poll->open_period_, poll->open_period_ == 0 ? 0 : G()->unix_time(), false);
 }
 
 Result<unique_ptr<MessageContent>> PollManager::get_poll_media_message_content(
