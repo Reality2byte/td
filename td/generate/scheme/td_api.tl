@@ -474,8 +474,8 @@ pollVoteRestrictionReasonQuickReply = PollVoteRestrictionReason;
 //@country_code Two-letter ISO 3166-1 alpha-2 code of the current user's country
 pollVoteRestrictionReasonCountryRestricted country_code:string = PollVoteRestrictionReason;
 
-//@description The user must be a member of the chat for at least a day to vote
-pollVoteRestrictionReasonMembershipRequired = PollVoteRestrictionReason;
+//@description The user must be a member of the chat for at least a day to vote @chat_id Identifier of the chat which must be joined for at least a day before the user can vote
+pollVoteRestrictionReasonMembershipRequired chat_id:int53 = PollVoteRestrictionReason;
 
 
 //@description Describes a task in a checklist
