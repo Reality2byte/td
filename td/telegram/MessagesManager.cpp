@@ -35332,9 +35332,9 @@ void MessagesManager::restore_message_reply_to_message_id(Dialog *d, Message *m)
   CHECK(replied_message_full_id.get_dialog_id() == d->dialog_id);
   LOG_CHECK(m->replied_message_info.get_reply_message_full_id(d->dialog_id, true) == replied_message_full_id)
       << replied_message_full_id << ' ' << m->replied_message_info << ' ' << *input_reply_to;
-
   auto message_id = get_message_id_by_random_id(d, m->reply_to_random_id, "restore_message_reply_to_message_id");
-  if ((message_id.is_valid() || message_id.is_valid_scheduled()) && !message_id.is_local()) {
+  if ((message_id.is_valid() || message_id.is_valid_scheduled()) && !message_id.is_local() &&
+      (is_message_forward(m) || !message_id.is_yet_unsent())) {
     update_message_reply_to_message_id(d, m, message_id, false, "restore_message_reply_to_message_id");
   } else {
     auto implicit_reply_to_message_id = get_message_topic(d->dialog_id, m).get_implicit_reply_to_message_id(td_);
