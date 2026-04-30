@@ -20287,7 +20287,7 @@ td_api::object_ptr<td_api::message> MessagesManager::get_dialog_event_log_messag
   auto edit_date = m->hide_edit_date ? 0 : m->edit_date;
   auto reply_markup = get_reply_markup_object(td_->user_manager_.get(), m->reply_markup);
   auto content = get_message_content_object(
-      m->content.get(), td_, dialog_id, m->message_id, DialogId(), false, m->is_outgoing, true, get_message_sender(m),
+      m->content.get(), td_, dialog_id, m->message_id, DialogId(), false, m->is_outgoing, false, get_message_sender(m),
       0, false, true, get_message_own_max_media_timestamp(m), m->invert_media, m->disable_web_page_preview);
 
   return td_api::make_object<td_api::message>(
