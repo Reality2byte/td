@@ -7148,7 +7148,7 @@ void merge_message_contents(Td *td, const MessageContent *old_content, MessageCo
       const auto *old_ = static_cast<const MessageText *>(old_content);
       const auto *new_ = static_cast<const MessageText *>(new_content);
       auto get_content_object = [td, dialog_id](const MessageContent *content) {
-        return to_string(get_message_content_object(content, td, dialog_id, MessageId(), dialog_id, false, false,
+        return to_string(get_message_content_object(content, td, dialog_id, MessageId(), dialog_id, true, false, false,
                                                     DialogId(), -1, false, false, std::numeric_limits<int32>::max(),
                                                     false, false));
       };
@@ -10800,8 +10800,9 @@ unique_ptr<MessageContent> get_action_message_content(Td *td, tl_object_ptr<tele
 
 td_api::object_ptr<td_api::MessageContent> get_message_content_object(
     const MessageContent *content, Td *td, DialogId dialog_id, MessageId message_id, DialogId initial_dialog_id,
-    bool is_outgoing, bool is_forward, DialogId sender_dialog_id, int32 message_date, bool is_content_secret,
-    bool skip_bot_commands, int32 max_media_timestamp, bool invert_media, bool disable_web_page_preview) {
+    bool is_real_message_content, bool is_outgoing, bool is_forward, DialogId sender_dialog_id, int32 message_date,
+    bool is_content_secret, bool skip_bot_commands, int32 max_media_timestamp, bool invert_media,
+    bool disable_web_page_preview) {
   CHECK(content != nullptr);
   auto is_server =
       message_id != MessageId() && message_id.is_any_server() && dialog_id.get_type() != DialogType::SecretChat;
@@ -11057,15 +11058,16 @@ td_api::object_ptr<td_api::MessageContent> get_message_content_object(
       const auto *m = static_cast<const MessagePoll *>(content);
       td_api::object_ptr<td_api::MessageContent> media;
       if (m->attached_media != nullptr) {
-        media = get_message_content_object(m->attached_media.get(), td, dialog_id, message_id, initial_dialog_id,
+        media = get_message_content_object(m->attached_media.get(), td, dialog_id, message_id, initial_dialog_id, false,
                                            is_outgoing, is_forward, sender_dialog_id, message_date, false, true, -1,
                                            false, true);
       }
       auto can_add_option = !td->auth_manager_->is_bot() && !is_forward && message_id.is_server() &&
                             td->dialog_manager_->have_input_peer(dialog_id, false, AccessRights::Read) &&
-                            td->poll_manager_->get_poll_can_add_option(m->poll_id);
+                            td->poll_manager_->get_poll_can_add_option(m->poll_id) && is_real_message_content;
       return make_tl_object<td_api::messagePoll>(
-          td->poll_manager_->get_poll_object(m->poll_id, dialog_id, message_id, initial_dialog_id),
+          td->poll_manager_->get_poll_object(m->poll_id, dialog_id, message_id, initial_dialog_id,
+                                             is_real_message_content),
           get_text_object(m->caption), std::move(media), can_add_option);
     }
     case MessageContentType::Dice: {
