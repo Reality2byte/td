@@ -744,7 +744,7 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
   }
 
   auto total_voter_count = poll->total_voter_count_ + voter_count_diff;
-  auto can_get_voters = can_get_poll_voters(poll_id, poll);
+  auto can_get_voters = can_get_poll_voters(poll_id, poll) && is_real_message_content;
   if (!can_get_voters && !td_->auth_manager_->is_bot()) {
     // hide the voter counts
     for (auto &poll_option : poll_options) {
