@@ -449,7 +449,9 @@ inputPollTypeRegular allow_adding_options:Bool = InputPollType;
 //@description A poll in quiz mode, which has predefined correct answers
 //@correct_option_ids Increasing list of 0-based identifiers of the correct answer options; must be non-empty
 //@explanation Text that is shown when the user chooses an incorrect answer or taps on the lamp icon; 0-200 characters with at most 2 line feeds
-inputPollTypeQuiz correct_option_ids:vector<int32> explanation:formattedText = InputPollType;
+//@explanation_media Media that is shown when the user chooses an incorrect answer or taps on the lamp icon; pass null if none. Must be one of the following types:
+//-inputMessageAnimation, inputMessageAudio, inputMessageDocument, non-live inputMessageLocation, inputMessagePhoto, inputMessageVenue, or inputMessageVideo without caption
+inputPollTypeQuiz correct_option_ids:vector<int32> explanation:formattedText explanation_media:InputMessageContent = InputPollType;
 
 
 //@class PollVoteRestrictionReason @description Reason of vote restriction in the poll for the current user

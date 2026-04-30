@@ -6851,7 +6851,7 @@ class CliClient final : public Actor {
           correct_option_ids.push_back(narrow_cast<int32>(options.size() - 1));
         }
         poll_type = td_api::make_object<td_api::inputPollTypeQuiz>(std::move(correct_option_ids),
-                                                                   as_formatted_text("_te*st*_"));
+                                                                   as_formatted_text("_te*st*_"), nullptr);
       } else {
         poll_type = td_api::make_object<td_api::inputPollTypeRegular>(rand_bool());
       }

@@ -4910,6 +4910,7 @@ static Result<InputMessageContent> create_input_message_content(
       bool has_open_answers = false;
       vector<int32> correct_option_ids;
       FormattedText explanation;
+      unique_ptr<MessageContent> explanation_media;
       if (input_poll->type_ == nullptr) {
         return Status::Error(400, "Poll type must be non-empty");
       }
@@ -4926,6 +4927,8 @@ static Result<InputMessageContent> create_input_message_content(
           TRY_STATUS(PollManager::check_quiz_correct_option_ids(correct_option_ids, options.size(), false));
           TRY_RESULT_ASSIGN(
               explanation, get_formatted_text(td, dialog_id, std::move(type->explanation_), is_bot, true, true, false));
+          TRY_RESULT_ASSIGN(explanation_media, td->poll_manager_->get_poll_media_message_content(
+                                                   std::move(type->explanation_media_), dialog_id, is_premium));
           break;
         }
         default:
@@ -4945,12 +4948,12 @@ static Result<InputMessageContent> create_input_message_content(
       }
       bool is_closed = is_bot ? input_poll->is_closed_ : false;
       content = make_unique<MessagePoll>(
-          td->poll_manager_->create_poll(std::move(question), std::move(options), input_poll->is_anonymous_,
-                                         input_poll->allows_multiple_answers_, has_open_answers,
-                                         !input_poll->allows_revoting_, input_poll->member_only_,
-                                         std::move(input_poll->country_codes_), input_poll->shuffle_options_,
-                                         input_poll->hide_results_until_closes_, is_quiz, std::move(correct_option_ids),
-                                         std::move(explanation), nullptr, open_period, close_date, is_closed),
+          td->poll_manager_->create_poll(
+              std::move(question), std::move(options), input_poll->is_anonymous_, input_poll->allows_multiple_answers_,
+              has_open_answers, !input_poll->allows_revoting_, input_poll->member_only_,
+              std::move(input_poll->country_codes_), input_poll->shuffle_options_,
+              input_poll->hide_results_until_closes_, is_quiz, std::move(correct_option_ids), std::move(explanation),
+              std::move(explanation_media), open_period, close_date, is_closed),
           std::move(caption), std::move(media));
       break;
     }
