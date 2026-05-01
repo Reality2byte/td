@@ -11426,7 +11426,7 @@ getMessageLinkInfo url:string = MessageLinkInfo;
 //@title Title of the style; 1-getOption("text_composition_style_title_length_max") characters
 //@custom_emoji_id Identifier of the custom emoji corresponding to the style
 //@prompt Prompt that will be used for text composition; 1-getOption("text_composition_style_prompt_length_max") characters
-//@show_creator True, if the current user should be shown as the creator of the style
+//@show_creator Pass true if the current user must be shown as the creator of the style
 createTextCompositionStyle title:string custom_emoji_id:int64 prompt:string show_creator:Bool = TextCompositionStyle;
 
 //@description Edits a custom text composition style that was created by the current user
@@ -11434,14 +11434,14 @@ createTextCompositionStyle title:string custom_emoji_id:int64 prompt:string show
 //@title Title of the style; 1-getOption("text_composition_style_title_length_max") characters
 //@custom_emoji_id Identifier of the custom emoji corresponding to the style
 //@prompt Prompt that will be used for text composition; 1-getOption("text_composition_style_prompt_length_max") characters
-//@show_creator True, if the current user should be shown as the creator of the style
+//@show_creator Pass true if the current user must be shown as the creator of the style
 editTextCompositionStyle name:string title:string custom_emoji_id:int64 prompt:string show_creator:Bool = TextCompositionStyle;
 
 //@description Deletes a custom text composition style that was created by the current user
 //@name Name of the style
 deleteTextCompositionStyle name:string = Ok;
 
-//@description Searched a custom text composition style by its name @name Name of the style
+//@description Searches a custom text composition style by its name @name Name of the style
 searchTextCompositionStyle name:string = TextCompositionStyle;
 
 //@description Returns an example of usage of a custom text composition style

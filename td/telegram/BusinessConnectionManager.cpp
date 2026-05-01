@@ -1693,8 +1693,9 @@ void BusinessConnectionManager::on_upload_message_internal_media(int64 request_i
     auto upload_result = r_upload_result.move_as_ok();
     input_media.push_back(std::move(upload_result.input_media_));
   }
+  auto full_input_media = get_message_content_input_media(message->content_.get(), td_, std::move(input_media));
   td_->create_handler<SendBusinessMediaQuery>(std::move(promise))
-      ->send(std::move(message), get_message_content_input_media(message->content_.get(), td_, std::move(input_media)));
+      ->send(std::move(message), std::move(full_input_media));
 }
 
 void BusinessConnectionManager::on_fail_send_message(unique_ptr<PendingMessage> &&message, const Status &error) {
