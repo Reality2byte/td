@@ -3018,9 +3018,6 @@ void DialogManager::check_dialog_username(DialogId dialog_id, const string &user
         return promise.set_value(CheckDialogUsernameResult::Occupied);
       }
       if (error.message() == "USERNAME_PURCHASE_AVAILABLE") {
-        if (begins_with(G()->get_option_string("my_phone_number"), "1")) {
-          return promise.set_value(CheckDialogUsernameResult::Invalid);
-        }
         return promise.set_value(CheckDialogUsernameResult::Purchasable);
       }
       return promise.set_error(std::move(error));
