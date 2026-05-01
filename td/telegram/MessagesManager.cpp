@@ -483,8 +483,8 @@ class GetDialogListQuery final : public Td::ResultHandler {
         auto dialogs = move_tl_object_as<telegram_api::messages_dialogs>(ptr);
         td_->user_manager_->on_get_users(std::move(dialogs->users_), "GetDialogListQuery");
         td_->chat_manager_->on_get_chats(std::move(dialogs->chats_), "GetDialogListQuery");
-        td_->messages_manager_->on_get_dialogs(folder_id_, std::move(dialogs->dialogs_),
-                                               narrow_cast<int32>(dialogs->dialogs_.size()),
+        auto total_count = narrow_cast<int32>(dialogs->dialogs_.size());
+        td_->messages_manager_->on_get_dialogs(folder_id_, std::move(dialogs->dialogs_), total_count,
                                                std::move(dialogs->messages_), std::move(promise_));
         break;
       }
@@ -35621,7 +35621,7 @@ void MessagesManager::on_binlog_events(vector<BinlogEvent> &&events) {
           restore_message_reply_to_message_id(to_dialog, message.get());
 
           forwarded_messages.push_back(add_message_to_dialog(to_dialog, std::move(message), false, true, &need_update,
-                                                             &need_update_dialog_pos, "forward message again"));
+                                                             &need_update_dialog_pos, "ForwardMessagesLogEvent"));
           send_update_new_message(to_dialog, forwarded_messages.back());
         }
 
@@ -35688,7 +35688,7 @@ void MessagesManager::on_binlog_events(vector<BinlogEvent> &&events) {
 
           sent_messages.push_back(add_message_to_dialog(d, std::move(message), false, true, &need_update,
                                                         &need_update_dialog_pos,
-                                                        "send quick reply shortcut message again"));
+                                                        "SendQuickReplyShortcutMessagesLogEvent"));
           send_update_new_message(d, sent_messages.back());
         }
 
