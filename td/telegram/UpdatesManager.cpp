@@ -3350,6 +3350,10 @@ void UpdatesManager::process_qts_update(tl_object_ptr<telegram_api::Update> &&up
           LOG(ERROR) << "Receive empty guest message";
           break;
         }
+        if (update->query_id_ == 0) {
+          LOG(ERROR) << "Receive invalid guest query identifier";
+          break;
+        }
         send_closure(G()->td(), &Td::send_update,
                      td_api::make_object<td_api::updateNewGuestQuery>(update->query_id_, std::move(message),
                                                                       std::move(reference_messages)));
