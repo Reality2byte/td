@@ -6901,9 +6901,6 @@ attachmentMenuBotColor light_color:int32 dark_color:int32 = AttachmentMenuBotCol
 //@web_app_placeholder Default placeholder for opened Web Apps in SVG format; may be null
 attachmentMenuBot bot_user_id:int53 supports_self_chat:Bool supports_user_chats:Bool supports_bot_chats:Bool supports_group_chats:Bool supports_channel_chats:Bool request_write_access:Bool is_added:Bool show_in_attachment_menu:Bool show_in_side_menu:Bool show_disclaimer_in_side_menu:Bool name:string name_color:attachmentMenuBotColor default_icon:file ios_static_icon:file ios_animated_icon:file ios_side_menu_icon:file android_icon:file android_side_menu_icon:file macos_icon:file macos_side_menu_icon:file icon_color:attachmentMenuBotColor web_app_placeholder:file = AttachmentMenuBot;
 
-//@description Information about the message sent by answerWebAppQuery @inline_message_id Identifier of the sent inline message, if known
-sentWebAppMessage inline_message_id:string = SentWebAppMessage;
-
 
 //@class BotWriteAccessAllowReason @description Describes a reason why a bot was allowed to write messages to the current user
 
@@ -12356,7 +12353,7 @@ closeWebApp web_app_launch_id:int64 = Ok;
 //@description Sets the result of interaction with a Web App and sends corresponding message on behalf of the user to the chat from which the query originated; for bots only
 //@web_app_query_id Identifier of the Web App query
 //@result The result of the query
-answerWebAppQuery web_app_query_id:string result:InputInlineQueryResult = SentWebAppMessage;
+answerWebAppQuery web_app_query_id:string result:InputInlineQueryResult = InlineMessageId;
 
 //@description Checks whether a file can be downloaded and saved locally by Web App request
 //@bot_user_id Identifier of the bot, providing the Web App
