@@ -1899,6 +1899,9 @@ void ChatManager::Chat::parse(ParserT &parser) {
   if (use_new_rights) {
     parse(status, parser);
     parse(default_permissions, parser);
+    if (status.is_administrator() && !status.is_creator()) {
+      status = DialogParticipantStatus::GroupAdministrator(false, string(status.get_rank()));
+    }
   } else {
     if (can_edit != (is_creator || is_administrator || everyone_is_administrator)) {
       LOG(ERROR) << "Have wrong can_edit flag";
