@@ -385,18 +385,18 @@ DialogParticipantStatus DialogParticipantStatus::Banned(int32 banned_until_date,
   return DialogParticipantStatus(Type::Banned, 0, fix_until_date(banned_until_date), std::move(rank));
 }
 
-DialogParticipantStatus DialogParticipantStatus::GroupAdministrator(bool is_creator, string &&rank) {
-  return Administrator(AdministratorRights(false, true, true, false, false, true, true, true, true, false, is_creator,
-                                           true, false, false, false, false, true, ChannelType::Unknown),
-                       std::move(rank), is_creator);
+DialogParticipantStatus DialogParticipantStatus::GroupAdministrator(bool is_current_user_creator, string &&rank) {
+  return Administrator(AdministratorRights(false, true, true, false, false, true, true, true, true, false, false, true,
+                                           false, false, false, false, true, ChannelType::Unknown),
+                       std::move(rank), is_current_user_creator);
 }
 
-DialogParticipantStatus DialogParticipantStatus::ChannelAdministrator(bool is_creator, bool is_megagroup) {
+DialogParticipantStatus DialogParticipantStatus::ChannelAdministrator(bool is_current_user_creator, bool is_megagroup) {
   auto rights = is_megagroup ? AdministratorRights(false, true, true, false, false, true, true, true, true, true, false,
                                                    false, false, false, false, false, true, ChannelType::Megagroup)
                              : AdministratorRights(false, true, false, true, true, true, false, true, false, false,
                                                    false, false, true, true, true, true, false, ChannelType::Broadcast);
-  return Administrator(rights, string(), is_creator);
+  return Administrator(rights, string(), is_current_user_creator);
 }
 
 DialogParticipantStatus::DialogParticipantStatus(bool can_be_edited,
@@ -652,7 +652,7 @@ DialogParticipant::DialogParticipant(DialogId dialog_id, UserId inviter_user_id,
 }
 
 DialogParticipant::DialogParticipant(tl_object_ptr<telegram_api::ChatParticipant> &&participant_ptr,
-                                     int32 chat_creation_date, bool is_creator) {
+                                     int32 chat_creation_date, bool is_current_user_creator) {
   switch (participant_ptr->get_id()) {
     case telegram_api::chatParticipant::ID: {
       auto participant = move_tl_object_as<telegram_api::chatParticipant>(participant_ptr);
@@ -669,7 +669,7 @@ DialogParticipant::DialogParticipant(tl_object_ptr<telegram_api::ChatParticipant
     case telegram_api::chatParticipantAdmin::ID: {
       auto participant = move_tl_object_as<telegram_api::chatParticipantAdmin>(participant_ptr);
       *this = {DialogId(UserId(participant->user_id_)), UserId(participant->inviter_id_), participant->date_,
-               DialogParticipantStatus::GroupAdministrator(is_creator, std::move(participant->rank_))};
+               DialogParticipantStatus::GroupAdministrator(is_current_user_creator, std::move(participant->rank_))};
       break;
     }
     default:
