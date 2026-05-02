@@ -69,6 +69,7 @@ AdministratorRights::AdministratorRights(bool is_anonymous, bool can_manage_dial
       can_manage_direct_messages = false;
       break;
     case ChannelType::Unknown:
+      can_manage_topics = false;
       break;
   }
   flags_ = (static_cast<uint64>(can_manage_dialog) * CAN_MANAGE_DIALOG) |
