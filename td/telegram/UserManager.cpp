@@ -8957,7 +8957,7 @@ void UserManager::on_get_user_full(telegram_api::object_ptr<telegram_api::userFu
   auto can_view_revenue = user->can_view_revenue_;
   auto bot_verification = BotVerification::get_bot_verification(std::move(user->bot_verification_));
   auto gift_settings = StarGiftSettings(user->display_gifts_button_, std::move(user->disallowed_gifts_));
-  if (u->is_deleted) {
+  if (u->is_deleted || u->is_bot) {
     gift_settings = StarGiftSettings::allow_nothing();
   }
   auto star_rating = StarRating::get_star_rating(std::move(user->stars_rating_));
