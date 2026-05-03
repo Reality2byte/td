@@ -4945,7 +4945,7 @@ static Result<InputMessageContent> create_input_message_content(
         return Status::Error(400, "Too many countries specified");
       }
       if (!td->dialog_manager_->is_broadcast_channel(dialog_id) &&
-          (input_poll->member_only_ || !input_poll->country_codes_.empty())) {
+          (input_poll->members_only_ || !input_poll->country_codes_.empty())) {
         return Status::Error(400, "Poll voters can be restricted only in channel chats");
       }
 
@@ -4958,7 +4958,7 @@ static Result<InputMessageContent> create_input_message_content(
       content = make_unique<MessagePoll>(
           td->poll_manager_->create_poll(
               std::move(question), std::move(options), input_poll->is_anonymous_, input_poll->allows_multiple_answers_,
-              has_open_answers, !input_poll->allows_revoting_, input_poll->member_only_,
+              has_open_answers, !input_poll->allows_revoting_, input_poll->members_only_,
               std::move(input_poll->country_codes_), input_poll->shuffle_options_,
               input_poll->hide_results_until_closes_, is_quiz, std::move(correct_option_ids), std::move(explanation),
               std::move(explanation_media), open_period, close_date, is_closed),
