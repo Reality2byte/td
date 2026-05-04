@@ -413,7 +413,7 @@ outline paths:vector<closedVectorPath> = Outline;
 //@description Describes one answer option of a poll
 //@id Unique identifier of the option in the poll; may be empty if yet unassigned
 //@text Option text; 1-100 characters; may contain only custom emoji entities
-//@media Option media. Currently, can be only of the types messageAnimation, messageLocation, messagePhoto, messageSticker, messageVenue, or messageVideo without caption
+//@media Option media; may be null if none. If present, currently, can be only of the types messageAnimation, messageLocation, messagePhoto, messageSticker, messageVenue, or messageVideo without caption
 //@voter_count Number of voters for this option, available only for closed or voted polls, or if the current user is the creator of the poll
 //@vote_percentage The percentage of votes for this option; 0-100
 //@recent_voter_ids Identifiers of recent voters for the option, if the poll is non-anonymous and poll results are available
@@ -439,7 +439,7 @@ pollTypeRegular = PollType;
 //@correct_option_ids Increasing list of 0-based identifiers of the correct answer options; empty for a yet unanswered poll
 //@explanation Text that is shown when the user chooses an incorrect answer or taps on the lamp icon; empty for a yet unanswered poll
 //@explanation_media Media that is shown when the user chooses an incorrect answer or taps on the lamp icon; may be null if none or the poll is unanswered yet.
-//-Currently, can be only of the types messageAnimation, messageAudio, messageDocument, messageLocation, messagePhoto, messageVenue, or messageVideo without caption
+//-If present, currently, can be only of the types messageAnimation, messageAudio, messageDocument, messageLocation, messagePhoto, messageVenue, or messageVideo without caption
 pollTypeQuiz correct_option_ids:vector<int32> explanation:formattedText explanation_media:MessageContent = PollType;
 
 
@@ -4892,7 +4892,7 @@ messageGame game:game = MessageContent;
 //@description A message with a poll
 //@poll Information about the poll
 //@param_description Description of the poll
-//@media Media attached to the poll. Currently, can be only of the types messageAnimation, messageAudio, messageDocument, messageLocation, messagePhoto, messageVenue, or messageVideo without caption
+//@media Media attached to the poll; may be null if none. If present, currently, can be only of the types messageAnimation, messageAudio, messageDocument, messageLocation, messagePhoto, messageVenue, or messageVideo without caption
 //@can_add_option True, if an option can be added to the poll using addPollOption
 messagePoll poll:poll description:formattedText media:MessageContent can_add_option:Bool = MessageContent;
 
