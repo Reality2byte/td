@@ -1741,7 +1741,7 @@ class GetPersonalChannelHistoryQuery final : public Td::ResultHandler {
 
   void send(telegram_api::object_ptr<telegram_api::InputUser> &&input_user, int32 limit) {
     send_query(G()->net_query_creator().create(telegram_api::messages_getPersonalChannelHistory(
-        std::move(input_user), limit, 0, std::numeric_limits<int32>::max(), 0)));
+        std::move(input_user), limit, std::numeric_limits<int32>::max(), 0, 0)));
   }
 
   void on_result(BufferSlice packet) final {
