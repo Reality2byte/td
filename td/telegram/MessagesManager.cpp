@@ -11311,7 +11311,7 @@ std::pair<DialogId, unique_ptr<MessagesManager::Message>> MessagesManager::creat
 
   UserId my_id = td->user_manager_->get_my_id();
   DialogId my_dialog_id = DialogId(my_id);
-  if (dialog_id == my_dialog_id && (sender_user_id != my_id || sender_dialog_id.is_valid())) {
+  if (!is_guest_message && dialog_id == my_dialog_id && (sender_user_id != my_id || sender_dialog_id.is_valid())) {
     LOG(ERROR) << "Receive " << sender_user_id << "/" << sender_dialog_id << " as a sender of " << message_id
                << " instead of self";
     sender_user_id = my_id;
@@ -11321,7 +11321,7 @@ std::pair<DialogId, unique_ptr<MessagesManager::Message>> MessagesManager::creat
   auto content_type = message_info.content->get_type();
   bool is_outgoing = message_info.is_outgoing;
   bool supposed_to_be_outgoing = sender_user_id == my_id && !(dialog_id == my_dialog_id && !message_id.is_scheduled());
-  if (sender_user_id.is_valid() && supposed_to_be_outgoing != is_outgoing && !is_guest_message &&
+  if (!is_guest_message && sender_user_id.is_valid() && supposed_to_be_outgoing != is_outgoing && !is_guest_message &&
       content_type != MessageContentType::ChatDeleteHistory) {
     LOG(ERROR) << "Receive wrong out flag = " << is_outgoing << " for " << message_id << " of type " << content_type
                << " in " << dialog_id << ": me is " << my_id << ", but message is from " << sender_user_id;
@@ -11380,10 +11380,7 @@ std::pair<DialogId, unique_ptr<MessagesManager::Message>> MessagesManager::creat
   }
 
   bool hide_edit_date = message_info.hide_edit_date;
-  if (hide_edit_date && is_bot) {
-    hide_edit_date = false;
-  }
-  if (hide_edit_date && content_type == MessageContentType::LiveLocation) {
+  if (hide_edit_date && (is_bot || content_type == MessageContentType::LiveLocation)) {
     hide_edit_date = false;
   }
 
@@ -11422,6 +11419,10 @@ std::pair<DialogId, unique_ptr<MessagesManager::Message>> MessagesManager::creat
                  << to_string(message_info.suggested_post);
       message_info.suggested_post = nullptr;
     }
+    if (message_info.is_pinned) {
+      LOG(ERROR) << "Receive pinned " << message_id << " in " << dialog_id;
+      message_info.is_pinned = false;
+    }
   }
   int32 view_count = message_info.view_count;
   if (view_count < 0) {
@@ -11453,12 +11454,6 @@ std::pair<DialogId, unique_ptr<MessagesManager::Message>> MessagesManager::creat
     noforwards = false;
     is_content_secret = false;
     message_info.invert_media = false;
-  }
-
-  bool is_pinned = message_info.is_pinned;
-  if (is_pinned && message_id.is_scheduled()) {
-    LOG(ERROR) << "Receive pinned " << message_id << " in " << dialog_id;
-    is_pinned = false;
   }
 
   bool has_mention =
@@ -11506,7 +11501,7 @@ std::pair<DialogId, unique_ptr<MessagesManager::Message>> MessagesManager::creat
   message->hide_edit_date = hide_edit_date;
   message->is_from_scheduled = message_info.is_from_scheduled;
   message->is_from_offline = message_info.is_from_offline;
-  message->is_pinned = is_pinned;
+  message->is_pinned = message_info.is_pinned;
   message->noforwards = noforwards;
   message->video_processing_pending = message_info.video_processing_pending;
   message->is_paid_suggested_post_stars = message_info.is_paid_suggested_post_stars;
@@ -11550,7 +11545,9 @@ std::pair<DialogId, unique_ptr<MessagesManager::Message>> MessagesManager::creat
     message->had_forward_info = true;
   }
 
-  td->messages_manager_->fix_message_topic(dialog_id, message.get(), false);
+  if (!is_guest_message) {
+    td->messages_manager_->fix_message_topic(dialog_id, message.get(), false);
+  }
 
   Dependencies dependencies;
   td->messages_manager_->add_message_dependencies(dependencies, message.get());
