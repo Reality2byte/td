@@ -27607,7 +27607,7 @@ bool MessagesManager::process_send_message_fail_error(int32 &error_code, string 
       } else if (error_message == "USER_IS_BOT") {
         if (is_bot && (dialog_id.get_type() == DialogType::User || dialog_id.get_type() == DialogType::SecretChat)) {
           error_code = 403;
-          error_message = "Bots can't send messages to bots";
+          error_message = "The bot can't send messages to the bot";
         }
       } else if (error_message == "PEER_ID_INVALID") {
         error_code = 403;
