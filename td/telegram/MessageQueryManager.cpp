@@ -1727,6 +1727,9 @@ class DeleteParticipantReactionQuery final : public Td::ResultHandler {
     if (sender_dialog_id_.get_type() != DialogType::Channel) {
       td_->dialog_manager_->on_get_dialog_error(dialog_id_, status, "DeleteParticipantReactionQuery");
     }
+    if (status.message() == "MESSAGE_NOT_MODIFIED") {
+      return promise_.set_value(Unit());
+    }
     promise_.set_error(std::move(status));
   }
 };
