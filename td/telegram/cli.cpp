@@ -2097,9 +2097,11 @@ class CliClient final : public Actor {
       send_request(td_api::make_object<td_api::getNetworkStatistics>());
       send_request(td_api::make_object<td_api::getCountryCode>());
       send_request(td_api::make_object<td_api::addProxy>(
-          td_api::make_object<td_api::proxy>("1.1.1.1", 1111, td_api::make_object<td_api::proxyTypeSocks5>()), true));
+          td_api::make_object<td_api::proxy>("1.1.1.1", 1111, td_api::make_object<td_api::proxyTypeSocks5>()), true,
+          "1111"));
       send_request(td_api::make_object<td_api::addProxy>(
-          td_api::make_object<td_api::proxy>("1.1.1.1", 1112, td_api::make_object<td_api::proxyTypeSocks5>()), false));
+          td_api::make_object<td_api::proxy>("1.1.1.1", 1112, td_api::make_object<td_api::proxyTypeSocks5>()), false,
+          "1112"));
       send_request(td_api::make_object<td_api::pingProxy>(nullptr));
 
       auto bad_request = td_api::make_object<td_api::setTdlibParameters>();
@@ -8584,14 +8586,18 @@ class CliClient final : public Actor {
         }
       }
       auto proxy = td_api::make_object<td_api::proxy>(server, port, std::move(type));
+      string comment;
+      if (rand_bool()) {
+        comment = to_string(Random::fast(0, 10));
+      }
       if (op[0] == 'e') {
-        send_request(td_api::make_object<td_api::editProxy>(as_proxy_id(proxy_id), std::move(proxy), enable));
+        send_request(td_api::make_object<td_api::editProxy>(as_proxy_id(proxy_id), std::move(proxy), enable, comment));
       } else if (op == "pproxy" || op == "pproxyp") {
         send_request(td_api::make_object<td_api::pingProxy>(std::move(proxy)));
       } else if (op == "tproxy") {
         send_request(td_api::make_object<td_api::testProxy>(std::move(proxy), 2, 10.0));
       } else {
-        send_request(td_api::make_object<td_api::addProxy>(std::move(proxy), enable));
+        send_request(td_api::make_object<td_api::addProxy>(std::move(proxy), enable, comment));
       }
     } else if (op == "ping") {
       send_request(td_api::make_object<td_api::pingProxy>());

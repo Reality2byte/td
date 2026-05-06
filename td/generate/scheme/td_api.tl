@@ -9534,8 +9534,9 @@ proxyTypeMtproto secret:string = ProxyType;
 //@id Unique identifier of the proxy
 //@last_used_date Point in time (Unix timestamp) when the proxy was last used; 0 if never
 //@is_enabled True, if the proxy is enabled now
+//@comment Comment for the proxy added by the user
 //@proxy The proxy
-addedProxy id:int32 last_used_date:int32 is_enabled:Bool proxy:proxy = AddedProxy;
+addedProxy id:int32 last_used_date:int32 is_enabled:Bool comment:string proxy:proxy = AddedProxy;
 
 //@description Represents a list of added proxy servers @proxies List of proxy servers
 addedProxies proxies:vector<addedProxy> = AddedProxies;
@@ -15385,13 +15386,15 @@ getApplicationDownloadLink = HttpUrl;
 //@description Adds a proxy server for network requests. Can be called before authorization
 //@proxy The proxy to add
 //@enable Pass true to immediately enable the proxy
-addProxy proxy:proxy enable:Bool = AddedProxy;
+//@comment Comment to set for the proxy
+addProxy proxy:proxy enable:Bool comment:string = AddedProxy;
 
 //@description Edits an existing proxy server for network requests. Can be called before authorization
 //@proxy_id Proxy identifier
 //@proxy The new information about the proxy
 //@enable Pass true to immediately enable the proxy
-editProxy proxy_id:int32 proxy:proxy enable:Bool = AddedProxy;
+//@comment New comment for the proxy
+editProxy proxy_id:int32 proxy:proxy enable:Bool comment:string = AddedProxy;
 
 //@description Enables a proxy. Only one proxy can be enabled at a time. Can be called before authorization @proxy_id Proxy identifier
 enableProxy proxy_id:int32 = Ok;

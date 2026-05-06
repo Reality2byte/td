@@ -9039,18 +9039,20 @@ void Requests::on_request(uint64 id, td_api::saveApplicationLogEvent &request) {
 }
 
 void Requests::on_request(uint64 id, td_api::addProxy &request) {
+  CLEAN_INPUT_STRING(request.comment_);
   CREATE_REQUEST_PROMISE();
   send_closure(G()->connection_creator(), &ConnectionCreator::add_proxy, -1, std::move(request.proxy_), request.enable_,
-               std::move(promise));
+               request.comment_, std::move(promise));
 }
 
 void Requests::on_request(uint64 id, td_api::editProxy &request) {
   if (request.proxy_id_ < 0) {
     return send_error_raw(id, 400, "Proxy identifier invalid");
   }
+  CLEAN_INPUT_STRING(request.comment_);
   CREATE_REQUEST_PROMISE();
   send_closure(G()->connection_creator(), &ConnectionCreator::add_proxy, request.proxy_id_, std::move(request.proxy_),
-               request.enable_, std::move(promise));
+               request.enable_, request.comment_, std::move(promise));
 }
 
 void Requests::on_request(uint64 id, const td_api::enableProxy &request) {
