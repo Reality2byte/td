@@ -11451,7 +11451,7 @@ getTextCompositionStyleExample name:string example_number:int32 = TextCompositio
 //@name Name of the style
 addTextCompositionStyle name:string = Ok;
 
-//@description Removes a custom text composition style from the list of used by the user styles
+//@description Removes a custom text composition style from the list of used by the user styles. If the style was created by the current user, then it can only be deleted
 //@name Name of the style
 removeTextCompositionStyle name:string = Ok;
 
