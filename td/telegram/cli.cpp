@@ -6860,7 +6860,7 @@ class CliClient final : public Actor {
         poll_type = td_api::make_object<td_api::inputPollTypeQuiz>(std::move(correct_option_ids),
                                                                    as_formatted_text("_te*st*_"), nullptr);
       } else {
-        poll_type = td_api::make_object<td_api::inputPollTypeRegular>(rand_bool());
+        poll_type = td_api::make_object<td_api::inputPollTypeRegular>(rand_bool() && op == "spollp");
       }
       auto can_restrict = channel_ids_.count(chat_id) > 0;
       vector<string> country_codes;
