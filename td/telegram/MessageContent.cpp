@@ -11724,7 +11724,7 @@ unique_ptr<MessageContent> get_uploaded_message_content(
             td->poll_manager_->get_individual_message_content(poll->poll_id, poll->attached_media, media_pos);
         CHECK(content != nullptr);
         content = std::move(new_content);
-        return std::move(m);
+        return m;
       }
       default:
         UNREACHABLE();
