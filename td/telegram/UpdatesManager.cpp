@@ -5008,6 +5008,7 @@ void UpdatesManager::on_update(tl_object_ptr<telegram_api::updateStarsRevenueSta
 
 void UpdatesManager::on_update(tl_object_ptr<telegram_api::updateAiComposeTones> update, Promise<Unit> &&promise) {
   td_->translation_manager_->reload_ai_compose_tones(Auto());
+  promise.set_value(Unit());
 }
 
 // unsupported updates
