@@ -667,7 +667,7 @@ vector<int32> PollManager::get_vote_percentage(const vector<int32> &voter_counts
 
 td_api::object_ptr<td_api::PollVoteRestrictionReason> PollManager::get_poll_vote_restriction_reason_object(
     PollId poll_id, const Poll *poll, DialogId dialog_id, MessageId message_id, DialogId initial_dialog_id,
-    bool is_real_message_content) const {
+    int32 initial_date, bool is_real_message_content) const {
   if (td_->auth_manager_->is_bot()) {
     return nullptr;
   }
@@ -699,7 +699,8 @@ td_api::object_ptr<td_api::PollVoteRestrictionReason> PollManager::get_poll_vote
     auto channel_id = initial_dialog_id.get_channel_id();
     int32 membership_delay = G()->is_test_dc() ? 300 : 86400;
     if (!td_->chat_manager_->get_channel_status(channel_id).is_member() ||
-        td_->chat_manager_->get_channel_date(channel_id) >= G()->unix_time() - membership_delay) {
+        td_->chat_manager_->get_channel_date(channel_id) >=
+            (initial_date > 0 ? initial_date : G()->unix_time()) - membership_delay) {
       return td_api::make_object<td_api::pollVoteRestrictionReasonMembershipRequired>(
           td_->dialog_manager_->get_chat_id_object(initial_dialog_id, "pollVoteRestrictionReasonMembershipRequired"));
     }
@@ -708,16 +709,17 @@ td_api::object_ptr<td_api::PollVoteRestrictionReason> PollManager::get_poll_vote
 }
 
 td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, DialogId dialog_id, MessageId message_id,
-                                                              DialogId initial_dialog_id,
+                                                              DialogId initial_dialog_id, int32 initial_date,
                                                               bool is_real_message_content) const {
   auto poll = get_poll(poll_id);
   CHECK(poll != nullptr);
-  return get_poll_object(poll_id, poll, dialog_id, message_id, initial_dialog_id, is_real_message_content);
+  return get_poll_object(poll_id, poll, dialog_id, message_id, initial_dialog_id, initial_date,
+                         is_real_message_content);
 }
 
 td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, const Poll *poll, DialogId dialog_id,
                                                               MessageId message_id, DialogId initial_dialog_id,
-                                                              bool is_real_message_content) const {
+                                                              int32 initial_date, bool is_real_message_content) const {
   auto poll_options = transform(
       poll->options_, [td = td_](const PollOption &poll_option) { return poll_option.get_poll_option_object(td); });
   int32 voter_count_diff = 0;
@@ -784,9 +786,9 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
       auto correct_option_ids = poll->correct_option_ids_;
       td_api::object_ptr<td_api::MessageContent> explanation_media;
       if (poll->explanation_media_ != nullptr) {
-        explanation_media =
-            get_message_content_object(poll->explanation_media_.get(), td_, dialog_id, message_id, initial_dialog_id,
-                                       false, false, false, DialogId(), 0, false, true, -1, false, true);
+        explanation_media = get_message_content_object(poll->explanation_media_.get(), td_, dialog_id, message_id,
+                                                       initial_dialog_id, false, false, false, DialogId(), initial_date,
+                                                       initial_date, false, true, -1, false, true);
       }
       poll_type = td_api::make_object<td_api::pollTypeQuiz>(
           std::move(correct_option_ids), get_formatted_text_object(nullptr, poll->explanation_, true, -1),
@@ -840,7 +842,7 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
       poll->allow_multiple_answers_, !poll->has_revoting_disabled_, poll->subscribers_only_,
       vector<string>(poll->country_codes_), std::move(option_order), std::move(poll_type), open_period, close_date,
       poll->is_closed_,
-      get_poll_vote_restriction_reason_object(poll_id, poll, dialog_id, message_id, initial_dialog_id,
+      get_poll_vote_restriction_reason_object(poll_id, poll, dialog_id, message_id, initial_dialog_id, initial_date,
                                               is_real_message_content));
 }
 
@@ -1930,12 +1932,13 @@ PollId PollManager::dup_poll(DialogId dialog_id, PollId poll_id) {
                                             MessageCopyOptions(true, false));
   }
   bool is_broadcast = td_->dialog_manager_->is_broadcast_channel(dialog_id);
-  return create_poll(
-      std::move(question), std::move(options), poll->is_anonymous_, poll->allow_multiple_answers_,
-      poll->has_open_answers_, poll->has_revoting_disabled_, is_broadcast ? poll->subscribers_only_ : false,
-      is_broadcast ? vector<string>(poll->country_codes_) : vector<string>(), poll->shuffle_answers_,
-      poll->hide_results_until_close_, poll->is_quiz_, poll->correct_option_ids_, std::move(explanation),
-      std::move(explanation_media), poll->open_period_, poll->open_period_ == 0 ? 0 : G()->unix_time(), false);
+  return create_poll(std::move(question), std::move(options), poll->is_anonymous_, poll->allow_multiple_answers_,
+                     poll->has_open_answers_, poll->has_revoting_disabled_,
+                     is_broadcast ? poll->subscribers_only_ : false,
+                     is_broadcast ? vector<string>(poll->country_codes_) : vector<string>(), poll->shuffle_answers_,
+                     poll->hide_results_until_close_, poll->is_quiz_, poll->correct_option_ids_, std::move(explanation),
+                     std::move(explanation_media), poll->open_period_,
+                     poll->open_period_ == 0 ? 0 : G()->unix_time() + poll->open_period_, false);
 }
 
 Result<unique_ptr<MessageContent>> PollManager::get_poll_media_message_content(
@@ -2442,7 +2445,7 @@ PollId PollManager::on_get_poll(PollId poll_id, tl_object_ptr<telegram_api::poll
     CHECK(td_->auth_manager_->is_bot());
     send_closure(G()->td(), &Td::send_update,
                  td_api::make_object<td_api::updatePoll>(
-                     get_poll_object(poll_id, poll, DialogId(), MessageId(), DialogId(), false)));
+                     get_poll_object(poll_id, poll, DialogId(), MessageId(), DialogId(), 0, false)));
 
     schedule_poll_unload(poll_id);
   }
