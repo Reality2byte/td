@@ -19900,7 +19900,9 @@ ChatReactions MessagesManager::get_message_available_reactions(const Dialog *d, 
       can_use_reactions = false;
     }
   }
-  if (can_use_reactions && !td_->dialog_manager_->get_dialog_permissions(d->dialog_id).can_send_reactions()) {
+  if (can_use_reactions && td_->dialog_manager_->is_group_dialog(d->dialog_id) &&
+      !td_->dialog_manager_->is_monoforum_channel(d->dialog_id) &&
+      !td_->dialog_manager_->get_dialog_permissions(d->dialog_id).can_send_reactions()) {
     if (unavailability_reason != nullptr) {
       *unavailability_reason = ReactionUnavailabilityReason::Restricted;
     }
