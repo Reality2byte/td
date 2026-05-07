@@ -1131,14 +1131,14 @@ vector<FileId> PollManager::get_poll_file_ids(PollId poll_id) const {
 
 void PollManager::add_poll_option(MessageFullId message_full_id, td_api::object_ptr<td_api::inputPollOption> &&option,
                                   Promise<Unit> &&promise) {
-  TRY_RESULT_PROMISE(promise, poll_id, td_->messages_manager_->get_message_poll_id(message_full_id, false));
+  TRY_STATUS_PROMISE(promise, td_->messages_manager_->get_message_poll_id(message_full_id, false));
   TRY_RESULT_PROMISE(promise, poll_option,
                      PollOption::get_poll_option(td_, message_full_id.get_dialog_id(), std::move(option)));
   td_->create_handler<AddPollAnswerQuery>(std::move(promise))->send(message_full_id, poll_option.text_);
 }
 
 void PollManager::delete_poll_option(MessageFullId message_full_id, const string &option_id, Promise<Unit> &&promise) {
-  TRY_RESULT_PROMISE(promise, poll_id, td_->messages_manager_->get_message_poll_id(message_full_id, false));
+  TRY_STATUS_PROMISE(promise, td_->messages_manager_->get_message_poll_id(message_full_id, false));
   td_->create_handler<DeletePollAnswerQuery>(std::move(promise))->send(message_full_id, option_id);
 }
 
