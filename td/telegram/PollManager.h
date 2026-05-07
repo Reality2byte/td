@@ -249,6 +249,8 @@ class PollManager final : public Actor {
   bool can_delete_poll_option(const Poll *poll, const PollOption *option, MessageId message_id, bool is_forward,
                               bool is_outgoing);
 
+  bool is_poll_vote_subscribers_only_limited(const Poll *poll, DialogId initial_dialog_id, int32 initial_date) const;
+
   td_api::object_ptr<td_api::PollVoteRestrictionReason> get_poll_vote_restriction_reason_object(
       PollId poll_id, const Poll *poll, DialogId dialog_id, MessageId message_id, DialogId initial_dialog_id,
       int32 initial_date, bool is_real_message_content) const;
@@ -286,7 +288,7 @@ class PollManager final : public Actor {
 
   void forget_local_poll(PollId poll_id);
 
-  bool can_get_poll_voters(PollId poll_id, const Poll *poll) const;
+  bool can_get_poll_voters(PollId poll_id, const Poll *poll, DialogId initial_dialog_id, int32 initial_date) const;
 
   MultiTimeout update_poll_timeout_{"UpdatePollTimeout"};
   MultiTimeout close_poll_timeout_{"ClosePollTimeout"};

@@ -665,6 +665,20 @@ vector<int32> PollManager::get_vote_percentage(const vector<int32> &voter_counts
   return result;
 }
 
+bool PollManager::is_poll_vote_subscribers_only_limited(const Poll *poll, DialogId initial_dialog_id,
+                                                        int32 initial_date) const {
+  if (!poll->subscribers_only_ || initial_dialog_id.get_type() != DialogType::Channel) {
+    return false;
+  }
+  auto channel_id = initial_dialog_id.get_channel_id();
+  if (!td_->chat_manager_->get_channel_status(channel_id).is_member()) {
+    return true;
+  }
+  int32 membership_delay = G()->is_test_dc() ? 300 : 86400;
+  return td_->chat_manager_->get_channel_date(channel_id) >=
+         (initial_date > 0 ? initial_date : G()->unix_time()) - membership_delay;
+}
+
 td_api::object_ptr<td_api::PollVoteRestrictionReason> PollManager::get_poll_vote_restriction_reason_object(
     PollId poll_id, const Poll *poll, DialogId dialog_id, MessageId message_id, DialogId initial_dialog_id,
     int32 initial_date, bool is_real_message_content) const {
@@ -695,15 +709,9 @@ td_api::object_ptr<td_api::PollVoteRestrictionReason> PollManager::get_poll_vote
       return td_api::make_object<td_api::pollVoteRestrictionReasonCountryRestricted>(country_code);
     }
   }
-  if (poll->subscribers_only_ && initial_dialog_id.get_type() == DialogType::Channel) {
-    auto channel_id = initial_dialog_id.get_channel_id();
-    int32 membership_delay = G()->is_test_dc() ? 300 : 86400;
-    if (!td_->chat_manager_->get_channel_status(channel_id).is_member() ||
-        td_->chat_manager_->get_channel_date(channel_id) >=
-            (initial_date > 0 ? initial_date : G()->unix_time()) - membership_delay) {
-      return td_api::make_object<td_api::pollVoteRestrictionReasonMembershipRequired>(
-          td_->dialog_manager_->get_chat_id_object(initial_dialog_id, "pollVoteRestrictionReasonMembershipRequired"));
-    }
+  if (is_poll_vote_subscribers_only_limited(poll, initial_dialog_id, initial_date)) {
+    return td_api::make_object<td_api::pollVoteRestrictionReasonMembershipRequired>(
+        td_->dialog_manager_->get_chat_id_object(initial_dialog_id, "pollVoteRestrictionReasonMembershipRequired"));
   }
   return nullptr;
 }
@@ -746,7 +754,7 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
   }
 
   auto total_voter_count = poll->total_voter_count_ + voter_count_diff;
-  auto can_get_voters = can_get_poll_voters(poll_id, poll) && is_real_message_content;
+  auto can_get_voters = can_get_poll_voters(poll_id, poll, initial_dialog_id, initial_date) && is_real_message_content;
   if (!can_get_voters && !td_->auth_manager_->is_bot()) {
     // hide the voter counts
     for (auto &poll_option : poll_options) {
@@ -838,8 +846,8 @@ td_api::object_ptr<td_api::poll> PollManager::get_poll_object(PollId poll_id, co
 
   return td_api::make_object<td_api::poll>(
       poll_id.get(), get_formatted_text_object(nullptr, poll->question_, true, -1), std::move(poll_options),
-      total_voter_count, std::move(recent_voters), can_get_voters && !poll->is_anonymous_, poll->is_anonymous_,
-      poll->allow_multiple_answers_, !poll->has_revoting_disabled_, poll->subscribers_only_,
+      total_voter_count, std::move(recent_voters), can_get_voters && !poll->is_anonymous_ && message_id.is_server(),
+      poll->is_anonymous_, poll->allow_multiple_answers_, !poll->has_revoting_disabled_, poll->subscribers_only_,
       vector<string>(poll->country_codes_), std::move(option_order), std::move(poll_type), open_period, close_date,
       poll->is_closed_,
       get_poll_vote_restriction_reason_object(poll_id, poll, dialog_id, message_id, initial_dialog_id, initial_date,
@@ -1421,7 +1429,8 @@ td_api::object_ptr<td_api::pollVoters> PollManager::get_poll_voters_object(
   return result;
 }
 
-bool PollManager::can_get_poll_voters(PollId poll_id, const Poll *poll) const {
+bool PollManager::can_get_poll_voters(PollId poll_id, const Poll *poll, DialogId initial_dialog_id,
+                                      int32 initial_date) const {
   CHECK(poll != nullptr);
   if (td_->auth_manager_->is_bot() || is_local_poll_id(poll_id)) {
     return false;
@@ -1443,6 +1452,9 @@ bool PollManager::can_get_poll_voters(PollId poll_id, const Poll *poll) const {
       !td::contains(poll->country_codes_, td_->option_manager_->get_option_string("phone_country_iso2"))) {
     return true;
   }
+  if (is_poll_vote_subscribers_only_limited(poll, initial_dialog_id, initial_date)) {
+    return true;
+  }
   return false;
 }
 
@@ -1460,7 +1472,7 @@ void PollManager::get_poll_voters(MessageFullId message_full_id, int32 option_id
   }
 
   auto poll = get_poll(poll_id);
-  if (!can_get_poll_voters(poll_id, poll) || poll->is_anonymous_) {
+  if ((!poll->subscribers_only_ && !can_get_poll_voters(poll_id, poll, DialogId(), 0)) || poll->is_anonymous_) {
     return promise.set_error(400, "Poll results can't be received");
   }
   if (option_id < 0 || static_cast<size_t>(option_id) >= poll->options_.size()) {
