@@ -289,11 +289,16 @@ class CliClient final : public Actor {
   }
 
   FlatHashMap<string, int64> username_to_supergroup_id_;
+  FlatHashSet<int64> channel_ids_;
+
   void register_supergroup(const td_api::supergroup &supergroup) {
     if (supergroup.usernames_ != nullptr) {
       for (auto &username : supergroup.usernames_->active_usernames_) {
         username_to_supergroup_id_[to_lower(username)] = supergroup.id_;
       }
+    }
+    if (supergroup.is_channel_) {
+      channel_ids_.insert(supergroup.id_);
     }
   }
 
@@ -6857,14 +6862,15 @@ class CliClient final : public Actor {
       } else {
         poll_type = td_api::make_object<td_api::inputPollTypeRegular>(rand_bool());
       }
+      auto can_restrict = channel_ids_.count(chat_id) > 0;
       vector<string> country_codes;
-      if (rand_bool()) {
+      if (rand_bool() && can_restrict) {
         country_codes.push_back("US");
       }
       send_message(chat_id, td_api::make_object<td_api::inputMessagePoll>(
                                 as_formatted_text(question), std::move(options), get_caption(), nullptr, op != "spollp",
-                                rand_bool(), rand_bool(), rand_bool(), std::move(country_codes), rand_bool(),
-                                rand_bool(), std::move(poll_type), 0, 0, false));
+                                rand_bool(), rand_bool(), rand_bool() && can_restrict, std::move(country_codes),
+                                rand_bool(), rand_bool(), std::move(poll_type), 0, 0, false));
     } else if (op == "schl") {
       ChatId chat_id;
       InputChecklist checklist;
