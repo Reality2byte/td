@@ -1481,7 +1481,6 @@ void BusinessConnectionManager::complete_upload_media(unique_ptr<PendingMessage>
   bool need_update = false;
 
   unique_ptr<MessageContent> &old_content = message->content_;
-  auto old_file_id = message->file_upload_id_.get_file_id();
   merge_and_compare_message_contents(td_, old_content.get(), new_content.get(), false, DialogId(), true,
                                      {message->file_upload_id_}, MessageSelfDestructType(), 0.0, nullptr,
                                      is_content_changed, need_update);
