@@ -5486,7 +5486,7 @@ static telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_in
         }
         input_media.push_back(std::move(media));
       }
-      return get_message_content_input_media(content, td, std::move(input_media));
+      return get_message_content_multi_input_media(content, td, std::move(input_media));
     }
     case MessageContentType::Photo: {
       const auto *m = static_cast<const MessagePhoto *>(content);
@@ -5630,7 +5630,7 @@ static telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_in
   return nullptr;
 }
 
-telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_input_media(
+telegram_api::object_ptr<telegram_api::InputMedia> get_message_content_multi_input_media(
     const MessageContent *content, Td *td, vector<telegram_api::object_ptr<telegram_api::InputMedia>> &&input_media) {
   CHECK(content != nullptr);
   switch (content->get_type()) {
