@@ -1287,7 +1287,7 @@ void BusinessConnectionManager::do_send_message(unique_ptr<PendingMessage> &&mes
       fake_message->content_ = std::move(message_contents[media_pos]);
       fake_message->init_file_upload_ids(td_);
       auto input_media = get_message_content_input_media(fake_message->content_.get(), td_, MessageSelfDestructType(),
-                                                         string(), td_->auth_manager_->is_bot());
+                                                         string(), td_->auth_manager_->is_bot(), -1);
       auto file_id = fake_message->file_upload_id_.get_file_id();
       if (input_media != nullptr || !file_id.is_valid()) {
         if (!file_id.is_valid() || td_->file_manager_->get_file_view(file_id).has_full_remote_location()) {
@@ -1307,8 +1307,8 @@ void BusinessConnectionManager::do_send_message(unique_ptr<PendingMessage> &&mes
     return;
   }
 
-  auto input_media =
-      get_message_content_input_media(content, td_, message->ttl_, message->send_emoji_, td_->auth_manager_->is_bot());
+  auto input_media = get_message_content_input_media(content, td_, message->ttl_, message->send_emoji_,
+                                                     td_->auth_manager_->is_bot(), -1);
   if (input_media != nullptr) {
     td_->create_handler<SendBusinessMediaQuery>(std::move(promise))->send(std::move(message), std::move(input_media));
     return;
@@ -1492,7 +1492,7 @@ void BusinessConnectionManager::complete_upload_media(unique_ptr<PendingMessage>
   }
 
   auto input_media =
-      get_message_content_input_media(message->content_.get(), td_, message->ttl_, message->send_emoji_, true);
+      get_message_content_input_media(message->content_.get(), td_, message->ttl_, message->send_emoji_, true, -1);
   if (input_media == nullptr) {
     return promise.set_error(400, "Failed to upload file");
   }
@@ -1560,7 +1560,7 @@ void BusinessConnectionManager::do_send_message_album(int64 request_id, Business
         create_business_message_to_send(business_connection_id, dialog_id, input_reply_to.clone(), disable_notification,
                                         protect_content, effect_id, nullptr, std::move(message_content));
     auto input_media = get_message_content_input_media(message->content_.get(), td_, message->ttl_,
-                                                       message->send_emoji_, td_->auth_manager_->is_bot());
+                                                       message->send_emoji_, td_->auth_manager_->is_bot(), -1);
     if (input_media != nullptr) {
       auto file_id = message->file_upload_id_.get_file_id();
       CHECK(file_id.is_valid());
