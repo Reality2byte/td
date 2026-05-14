@@ -163,7 +163,8 @@ class RawConnectionDefault final : public RawConnection {
     while (transport_->can_read()) {
       BufferSlice packet;
       uint32 quick_ack = 0;
-      TRY_RESULT(wait_size, transport_->read_next(&packet, &quick_ack));
+      int32 error_code = 0;
+      TRY_RESULT(wait_size, transport_->read_next(&packet, &quick_ack, &error_code));
       if (wait_size != 0) {
         constexpr size_t MAX_PACKET_SIZE = (1 << 22) + 1024;
         if (wait_size > MAX_PACKET_SIZE) {
@@ -189,7 +190,7 @@ class RawConnectionDefault final : public RawConnection {
       PacketInfo packet_info;
       packet_info.version = 2;
 
-      TRY_RESULT(read_result, Transport::read(packet.as_mutable_slice(), auth_key, &packet_info));
+      TRY_RESULT(read_result, Transport::read(packet.as_mutable_slice(), error_code, auth_key, &packet_info));
       switch (read_result.type()) {
         case Transport::ReadResult::Quickack:
           TRY_STATUS(on_quick_ack(read_result.quick_ack(), callback));
@@ -404,7 +405,7 @@ class RawConnectionHttp final : public RawConnection {
         PacketInfo packet_info;
         packet_info.version = 2;
 
-        TRY_RESULT(read_result, Transport::read(packet.as_mutable_slice(), auth_key, &packet_info));
+        TRY_RESULT(read_result, Transport::read(packet.as_mutable_slice(), 0, auth_key, &packet_info));
         switch (read_result.type()) {
           case Transport::ReadResult::Quickack: {
             break;
